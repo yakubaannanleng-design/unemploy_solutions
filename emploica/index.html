@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/logo_app.jpeg" type="image/jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="workca — Plateforme de mise en relation entre chercheurs d'emploi et employeurs au Cameroun." />
+    <meta name="author" content="workca" />
+    <meta name="theme-color" content="#16161a" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="workca" />
+    <meta property="og:description" content="Trouvez un emploi, publiez un besoin — au Cameroun." />
+    <meta property="og:image" content="/logo_app.jpeg" />
+    <meta property="og:site_name" content="workca" />
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="workca" />
+    <meta property="twitter:description" content="Trouvez un emploi, publiez un besoin — au Cameroun." />
+    <meta property="twitter:image" content="/logo_app.jpeg" />
+
+    <title>workca : Emploi pour tous au Cameroun</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <style type="text/tailwindcss">
+      @theme inline {
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-card: var(--card);
+        --color-card-foreground: var(--card-foreground);
+        --color-popover: var(--popover);
+        --color-popover-foreground: var(--popover-foreground);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-secondary: var(--secondary);
+        --color-secondary-foreground: var(--secondary-foreground);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-accent-foreground: var(--accent-foreground);
+        --color-destructive: var(--destructive);
+        --color-destructive-foreground: var(--destructive-foreground);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-ring: var(--ring);
+        --color-brand-50: #fef5ee;
+        --color-brand-100: #fce5d1;
+        --color-brand-200: #f8caa4;
+        --color-brand-300: #f2a672;
+        --color-brand-400: #ee8d52;
+        --color-brand-500: #e8793a;
+        --color-brand-600: #cf6528;
+        --color-brand-700: #b8531f;
+        --color-brand-800: #8f3f17;
+        --color-brand-900: #6f3016;
+        --color-brand-950: #3b1809;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "var(--border)",
+              input: "var(--input)",
+              ring: "var(--ring)",
+              background: "var(--background)",
+              foreground: "var(--foreground)",
+              primary: { DEFAULT: "var(--primary)", foreground: "var(--primary-foreground)" },
+              secondary: { DEFAULT: "var(--secondary)", foreground: "var(--secondary-foreground)" },
+              muted: { DEFAULT: "var(--muted)", foreground: "var(--muted-foreground)" },
+              accent: { DEFAULT: "var(--accent)", foreground: "var(--accent-foreground)" },
+              destructive: { DEFAULT: "var(--destructive)", foreground: "var(--destructive-foreground)" },
+              card: { DEFAULT: "var(--card)", foreground: "var(--card-foreground)" },
+              popover: { DEFAULT: "var(--popover)", foreground: "var(--popover-foreground)" },
+              brand: {
+                50: "#fef5ee",
+                100: "#fce5d1",
+                200: "#f8caa4",
+                300: "#f2a672",
+                400: "#ee8d52",
+                500: "#e8793a",
+                600: "#cf6528",
+                700: "#b8531f",
+                800: "#8f3f17",
+                900: "#6f3016",
+                950: "#3b1809",
+              },
+            },
+            borderRadius: { lg: "var(--radius)", md: "calc(var(--radius) - 2px)", sm: "calc(var(--radius) - 4px)" },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
