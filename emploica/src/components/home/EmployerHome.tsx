@@ -1,4 +1,5 @@
-// Composant de l interface utilisateur\nimport { useStore } from "../../lib/store";
+// Composant de l interface utilisateur
+import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Link } from "react-router-dom";
 import { Badge } from "../ui/badge";
