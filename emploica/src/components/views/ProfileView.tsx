@@ -9,6 +9,8 @@ import { Separator } from "../ui/separator";
 import { User, Building2, ShieldCheck, MapPin, Briefcase, Star, BookOpen } from "lucide-react";
 import { categoryById } from "../../data/categories";
 import ProfileEditor from "./ProfileEditor";
+import { toast } from "sonner";
+import { Progress } from "../ui/progress";
 import { supabase } from "../../lib/supabase";
 import { TRAININGS } from "../../data/trainings";
 
@@ -32,8 +34,9 @@ export default function ProfileView() {
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = data.publicUrl;
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
+      toast.success(lang === "fr" ? "Photo mise à jour." : "Photo updated.");
     } catch (err: any) {
-      alert(err?.message ?? "Upload failed");
+      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again."));
     } finally {
       setUploading(false);
     }
@@ -50,8 +53,9 @@ export default function ProfileView() {
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("cvs").getPublicUrl(path);
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, cvUrl: data.publicUrl } : s)));
+      toast.success(lang === "fr" ? "CV téléversé." : "CV uploaded.");
     } catch (err: any) {
-      alert(err?.message ?? "Upload failed");
+      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again."));
     } finally {
       setUploading(false);
     }
@@ -142,17 +146,57 @@ export default function ProfileView() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">{t("profile", lang)}</h2>
         <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{t("edit", lang) ?? "Modifier"}</Button>
+      <Card>
+        <CardHeader><CardTitle>{lang === "fr" ? "Complétion du profil" : "Profile completion"}</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {(() => {
+            const checks = [
+              { label: lang === "fr" ? "Photo" : "Photo", ok: !!seeker.photo },
+              { label: lang === "fr" ? "CV" : "CV", ok: !!seeker.cvUrl },
+              { label: t("skills", lang), ok: seeker.skills.length > 0 },
+              { label: t("description", lang), ok: !!seeker.bio },
+              { label: t("experience", lang), ok: !!seeker.experience },
+              { label: lang === "fr" ? "Formation" : "Education", ok: !!seeker.education },
+            ];
+            const done = checks.filter((c) => c.ok).length;
+            const pct = Math.round((done / checks.length) * 100);
+            return (
+              <>
+                <div className="flex items-center justify-between text-sm">
+                  <span>{lang === "fr" ? "Profil complété à" : "Profile completed"} {pct} %</span>
+                </div>
+                <Progress value={pct} className="h-2" />
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  {checks.map((c) => (
+                    <li key={c.label} className="flex items-center gap-2">
+                      <span className={c.ok ? "text-green-500" : "text-red-500"}>{c.ok ? "✓" : "✗"}</span>
+                      {c.label}
+                      {!c.ok && (
+                        <button className="text-primary hover:underline ml-auto" onClick={() => setEditing(true)}>
+                          {lang === "fr" ? "Ajouter" : "Add"}
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            );
+          })()}
+        </CardContent>
+      </Card>
+
+
       </div>
 
       <Card>
         <CardHeader><CardTitle>{t("jobSeeker", lang)}</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold overflow-hidden">
+            <div className="h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold overflow-hidden" style={{ backgroundColor: `hsl(${(currentUser.name.charCodeAt(0) * 37) % 360}, 60%, 45%)` }}>
               {seeker.photo ? (
                 <img src={seeker.photo} alt={currentUser.name} className="h-full w-full object-cover" />
               ) : (
-                currentUser.name.charAt(0)
+                <span className="text-white">{currentUser.name.charAt(0).toUpperCase()}</span>
               )}
             </div>
             <div className="mt-3">
@@ -183,23 +227,42 @@ export default function ProfileView() {
             </div>
           </div>
           <Separator className="my-3" />
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /> {seeker.zone.region}, {seeker.zone.city}, {seeker.zone.quartier}</div>
-            <div><span className="text-muted-foreground">{t("availability", lang)} : </span>{seeker.availability}</div>
-            <div><span className="text-muted-foreground">{t("distance", lang)} : </span>{seeker.radiusKm} {t("distanceKm", lang)}</div>
-            <div><span className="text-muted-foreground">{t("experience", lang)} : </span>{seeker.experience}</div>
-            {seeker.education && <div><span className="text-muted-foreground">{lang === "fr" ? "Formation" : "Education"} : </span>{seeker.education}</div>}
-            {seeker.cvUrl && (
-              <div>
-                <a href={seeker.cvUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                  {lang === "fr" ? "Télécharger le CV" : "Download CV"}
-                </a>
-              </div>
-            )}
-            <div><span className="text-muted-foreground">{t("skills", lang)} : </span>{seeker.skills.join(", ")}</div>
-            <div><span className="text-muted-foreground">{t("description", lang)} : </span>{seeker.bio}</div>
-            <div><span className="text-muted-foreground">{lang === "fr" ? "Missions terminées" : "Jobs done"} : </span>{seeker.missionsDone}</div>
-          </div>
+           <div className="space-y-2 text-sm">
+             <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /> {seeker.zone.region}, {seeker.zone.city}{seeker.zone.quartier ? `, ${seeker.zone.quartier}` : ""}</div>
+             <div><span className="text-muted-foreground">{t("availability", lang)} : </span>{seeker.availability || (lang === "fr" ? "Non renseigné" : "Not specified")}</div>
+             <div><span className="text-muted-foreground">{t("distance", lang)} : </span>{seeker.radiusKm} {t("distanceKm", lang)}</div>
+             <div>
+               <span className="text-muted-foreground">{t("experience", lang)} : </span>
+               {seeker.experience || <span className="text-muted-foreground italic">{lang === "fr" ? "Non renseigné" : "Not specified"} <button className="text-primary hover:underline ml-1" onClick={() => setEditing(true)}>{lang === "fr" ? "Ajouter" : "Add"}</button></span>}
+             </div>
+             {seeker.education && <div><span className="text-muted-foreground">{lang === "fr" ? "Formation" : "Education"} : </span>{seeker.education}</div>}
+             {seeker.cvUrl && (
+               <div>
+                 <a href={seeker.cvUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                   {lang === "fr" ? "Télécharger le CV" : "Download CV"}
+                 </a>
+               </div>
+             )}
+             <div>
+               <span className="text-muted-foreground">{t("skills", lang)} : </span>
+               {seeker.skills.length > 0 ? seeker.skills.join(", ") : <span className="text-muted-foreground italic">{lang === "fr" ? "Non renseigné" : "Not specified"} <button className="text-primary hover:underline ml-1" onClick={() => setEditing(true)}>{lang === "fr" ? "Ajouter" : "Add"}</button></span>}
+             </div>
+             <div>
+               <span className="text-muted-foreground">{t("description", lang)} : </span>
+               {seeker.bio ? seeker.bio : <span className="text-muted-foreground italic">{lang === "fr" ? "Non renseigné" : "Not specified"} <button className="text-primary hover:underline ml-1" onClick={() => setEditing(true)}>{lang === "fr" ? "Ajouter" : "Add"}</button></span>}
+             </div>
+           </div>
+            <div>
+              <span className="text-muted-foreground">{lang === "fr" ? "Missions terminées" : "Jobs done"} : </span>
+              {seeker.missionsDone > 0 ? seeker.missionsDone : (
+                <span className="text-muted-foreground italic">
+                  {lang === "fr" ? "Aucune pour l'instant." : "None yet."}{" "}
+                  <Link to="/offres" className="text-primary hover:underline">
+                    {lang === "fr" ? "Postule à ta première offre" : "Apply to your first offer"}
+                  </Link>
+                </span>
+              )}
+            </div>
         </CardContent>
       </Card>
 
@@ -231,3 +294,5 @@ export default function ProfileView() {
     </div>
   );
 }
+
+

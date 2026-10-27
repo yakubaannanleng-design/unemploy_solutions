@@ -8,6 +8,7 @@ import { Separator } from "../ui/separator";
 import { Link } from "react-router-dom";
 import { MessageSquare, Briefcase, MapPin, Star } from "lucide-react";
 import { categoryById } from "../../data/categories";
+import { getIcon } from "../../lib/iconMap";
 
 export default function SeekerHome() {
   const { lang } = useLang();
@@ -101,15 +102,16 @@ export default function SeekerHome() {
 function OfferPreview({ offer }: { offer: any }) {
   const { lang } = useLang();
   const cat = categoryById(offer.category);
+  const Icon = getIcon(cat?.icon ?? "briefcase");
   return (
     <Link to={`/offres/${offer.id}`} className="block">
       <div className="rounded-lg border p-3 hover:shadow-sm">
         <div className="flex items-center gap-2">
-          <span>{cat?.icon}</span>
+          <Icon className="h-5 w-5 text-primary" aria-hidden />
           <div>
             <div className="font-medium">{offer.title}</div>
             <div className="text-xs text-muted-foreground">
-              {offer.location.city}, {offer.location.quartier} · {offer.duration}
+              {offer.location.city}, {offer.location.quartier} · {offer.contract} · {offer.duration}
             </div>
           </div>
         </div>

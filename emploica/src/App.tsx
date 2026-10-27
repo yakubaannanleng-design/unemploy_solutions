@@ -3,6 +3,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./lib/store";
+import { Toaster } from "./components/ui/sonner";
 import { useLang, t } from "./lib/i18n";
 import { supabase } from "./lib/supabase";
 import Header from "./components/layout/Header";
@@ -256,7 +257,7 @@ export default function App() {
         onSwitchUser={switchUser}
         demoUsers={DEMO_USERS}
       />
-      <main id="main-content" className="container py-6">
+      <main id="main-content" className="container px-4 py-6">
         <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Chargement…</div>}>
         <Routes>
           <Route path="/login" element={<AuthPage onLogin={login} />} />
@@ -361,6 +362,7 @@ export default function App() {
         <div className="container">{t("antiScam", lang)} {"\u00B7"} {"\u00A9"} {new Date().getFullYear()} MADI OUMAROU YAKUBA {"\u2014"} Workca</div>
       </footer>
       {isAuthed && <BottomNav currentUser={currentUser} />}
+      <Toaster />
     </div>
   );
 }

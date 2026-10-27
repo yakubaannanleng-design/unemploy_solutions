@@ -7,6 +7,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Separator } from "../ui/separator";
 import OfferCard from "../offers/OfferCard";
 import OfferDetailModal from "../offers/OfferDetailModal";
@@ -26,6 +27,7 @@ export default function OffersView() {
   const [quartier, setQuartier] = useState("");
   const [contractFilter, setContractFilter] = useState("");
   const [sortBy, setSortBy] = useState("date");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<Offer | null>(null);
   const [ratingOpen, setRatingOpen] = useState(false);
 
@@ -159,6 +161,52 @@ export default function OffersView() {
             placeholder={`${t("search", lang)}...`}
           />
         </div>
+      </div>
+
+      <div className="lg:hidden">
+        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">{t("filters", lang)}</Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 overflow-y-auto">
+            <div className="space-y-4 pt-4">
+              <div>
+                <div className="text-sm font-medium mb-2">{t("category", lang)}</div>
+                <CategoryGrid selected={categories} onToggle={(id) => setCategories((c) => c.includes(id) ? c.filter((x) => x !== id) : [...c, id])} />
+              </div>
+              <Separator />
+              <LocationFilter region={region} city={city} quartier={quartier} onChange={(f, v) => { if (f === "region") { setRegion(v); setCity(""); setQuartier(""); } else if (f === "city") { setCity(v); setQuartier(""); } else setQuartier(v); }} />
+              <Separator />
+              <div className="space-y-2">
+                <div className="text-sm font-medium">{t("contract", lang)}</div>
+                <Select value={contractFilter || "all"} onValueChange={(v) => setContractFilter(v === "all" ? "" : v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("all", lang) ?? "Tous"}</SelectItem>
+                    {["permanent", "temporaire", "mission", "stage", "temps-partiel", "indépendant"].map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium">{lang === "fr" ? "Tri" : "Sort"}</div>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">{lang === "fr" ? "Plus récents" : "Newest"}</SelectItem>
+                    <SelectItem value="views">{t("views", lang) ?? "Vues"}</SelectItem>
+                    <SelectItem value="pay">{t("pay", lang)}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button className="flex-1" onClick={() => setFiltersOpen(false)}>{lang === "fr" ? "Appliquer" : "Apply"}</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { setCategories([]); setRegion(""); setCity(""); setQuartier(""); setContractFilter(""); setSortBy("date"); setQ(""); }}>{lang === "fr" ? "Réinitialiser" : "Reset"}</Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4">

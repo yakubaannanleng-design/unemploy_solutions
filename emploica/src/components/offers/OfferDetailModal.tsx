@@ -2,6 +2,7 @@ import { MapPin, Star } from "lucide-react";
 import { useLang, t } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { categoryById } from "../../data/categories";
+import { getIcon } from "../../lib/iconMap";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
@@ -37,6 +38,7 @@ export default function OfferDetailModal({
   const { state, currentUser } = useStore();
   if (!offer) return null;
   const cat = categoryById(offer.category);
+  const Icon = getIcon(cat?.icon ?? "briefcase");
   const payLabel = offer.payMode === "négocier" ? t("contact", lang) : offer.pay;
   const mine = currentUser;
   const isMine = isEmployer ?? offer.employerId === mine.id;
@@ -48,7 +50,7 @@ export default function OfferDetailModal({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <span className="text-xl" aria-hidden>{cat?.icon ?? "briefcase"}</span>
+            <Icon className="h-5 w-5 text-primary" aria-hidden />
             <div>
               <DialogTitle>{offer.title}</DialogTitle>
               <span className="text-xs text-muted-foreground">

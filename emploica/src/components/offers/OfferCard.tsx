@@ -1,6 +1,7 @@
 import { MapPin, Clock, Banknote, Briefcase, Eye, Heart } from "lucide-react";
 import { useLang, t } from "../../lib/i18n";
 import { categoryById } from "../../data/categories";
+import { getIcon } from "../../lib/iconMap";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import type { Offer } from "../../types";
@@ -17,6 +18,7 @@ interface OfferCardProps {
 export default function OfferCard({ offer, onClick, onApply, alreadyApplied, isFavorite, onToggleFavorite }: OfferCardProps) {
   const { lang } = useLang();
   const cat = categoryById(offer.category);
+  const Icon = getIcon(cat?.icon ?? "briefcase");
   const payLabel = offer.payMode === "négocier" ? t("contact", lang) : offer.pay;
   return (
     <div
@@ -25,7 +27,7 @@ export default function OfferCard({ offer, onClick, onApply, alreadyApplied, isF
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-xl" aria-hidden>{cat?.icon ?? "briefcase"}</span>
+          <Icon className="h-5 w-5 text-primary" aria-hidden />
           <div>
             <h3 className="font-semibold leading-tight">{offer.title}</h3>
             <span className="text-xs text-muted-foreground">

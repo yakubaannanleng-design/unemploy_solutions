@@ -20,7 +20,7 @@ const dict: Record<string, Record<Lang, string>> = {
   region: { fr: "Région", en: "Region" },
   city: { fr: "Ville", en: "City" },
   quartier: { fr: "Quartier", en: "Neighborhood" },
-  distance: { fr: "Distance (km)", en: "Distance (km)" },
+  distance: { fr: "Distance", en: "Distance" },
   contract: { fr: "Contrat", en: "Contract" },
   availability: { fr: "Disponibilité", en: "Availability" },
   apply: { fr: "Candidater", en: "Apply" },

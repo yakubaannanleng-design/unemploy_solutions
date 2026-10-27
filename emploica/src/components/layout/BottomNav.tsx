@@ -46,7 +46,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
       {/* Barre inférieure (mobile) */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur flex items-center justify-around h-14">
         {items.map((it) => (
-          <Link key={it.to} to={it.to} className="flex flex-col items-center justify-center flex-1 text-xs text-muted-foreground hover:text-primary relative">
+          <Link key={it.to} to={it.to} className="flex flex-col items-center justify-center flex-1 text-xs text-muted-foreground hover:text-primary relative min-h-[44px]">
             <it.icon className="h-5 w-5" />
             <span>{it.label}</span>
             {it.badge && it.badge > 0 && (
