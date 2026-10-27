@@ -34,6 +34,24 @@ export default function ProfileView() {
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
     } catch (err: any) {
       alert(err?.message ?? "Upload failed");
+  const uploadCv = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !seeker) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${currentUser.id}/cv.${ext}`;
+      const { error: upErr } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("cvs").getPublicUrl(path);
+      update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, cvUrl: data.publicUrl } : s)));
+    } catch (err: any) {
+      alert(err?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
     } finally {
       setUploading(false);
     }
@@ -145,6 +163,14 @@ export default function ProfileView() {
                 </span>
               </label>
             </div>
+            <div className="mt-2">
+              <label className="text-xs text-muted-foreground cursor-pointer">
+                <input type="file" accept=".pdf,.doc,.docx" onChange={uploadCv} disabled={uploading} className="hidden" />
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-input text-sm hover:bg-accent cursor-pointer">
+                  {uploading ? (lang === "fr" ? "Téléchargement..." : "Uploading...") : (lang === "fr" ? "Télécharger un CV" : "Upload CV")}
+                </span>
+              </label>
+            </div>
 
             <div>
               <div className="font-medium flex items-center gap-2">
@@ -162,6 +188,14 @@ export default function ProfileView() {
             <div><span className="text-muted-foreground">{t("availability", lang)} : </span>{seeker.availability}</div>
             <div><span className="text-muted-foreground">{t("distance", lang)} : </span>{seeker.radiusKm} {t("distanceKm", lang)}</div>
             <div><span className="text-muted-foreground">{t("experience", lang)} : </span>{seeker.experience}</div>
+            {seeker.education && <div><span className="text-muted-foreground">{lang === "fr" ? "Formation" : "Education"} : </span>{seeker.education}</div>}
+            {seeker.cvUrl && (
+              <div>
+                <a href={seeker.cvUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                  {lang === "fr" ? "Télécharger le CV" : "Download CV"}
+                </a>
+              </div>
+            )}
             <div><span className="text-muted-foreground">{t("skills", lang)} : </span>{seeker.skills.join(", ")}</div>
             <div><span className="text-muted-foreground">{t("description", lang)} : </span>{seeker.bio}</div>
             <div><span className="text-muted-foreground">{lang === "fr" ? "Missions terminées" : "Jobs done"} : </span>{seeker.missionsDone}</div>

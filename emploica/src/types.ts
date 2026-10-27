@@ -58,6 +58,8 @@ export interface SeekerProfile {
   zone: Location;
   radiusKm: number;
   experience: string;
+  education?: string;
+  cvUrl?: string;
   languages: string[];
   photo?: string;
   missionsDone: number;

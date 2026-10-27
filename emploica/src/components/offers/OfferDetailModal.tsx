@@ -60,6 +60,16 @@ export default function OfferDetailModal({
         <div className="space-y-3 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <MapPin_ /> {offer.location.region}, {offer.location.city}, {offer.location.quartier}
+            {offer.location.lat && offer.location.lng && (
+              <a
+                href={`https://www.google.com/maps?q=${offer.location.lat},${offer.location.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline text-xs ml-2"
+              >
+                {lang === "fr" ? "Voir sur la carte" : "View on map"}
+              </a>
+            )}
           </div>
           {employer && (
             <div className="flex items-center gap-2">
