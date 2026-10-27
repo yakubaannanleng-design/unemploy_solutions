@@ -1,4 +1,4 @@
-// En-tête de navigation de l'application Workca.
+﻿// En-tête de navigation de l'application Workca.
 import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -57,17 +57,6 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
           )}
         </div>
 
-        <nav className="hidden md:flex items-center gap-1">
-          {currentUser && nav("/" + currentUser.role, t("home", lang))}
-          {currentUser && nav("/offres", t("offers", lang))}
-          {currentUser && nav("/favoris", t("favorites", lang) ?? "Favoris")}
-          {currentUser && nav("/boulots-eclair", t("flash", lang))}
-          {currentUser && nav("/notifications", t("notifications", lang))}
-          {currentUser && nav("/parametres", t("settings", lang) ?? "Paramètres")}
-          {currentUser && nav("/messages", t("messages", lang))}
-          {currentUser?.role === "employeur" && nav("/offres/nouveau", t("createOffer", lang))}
-          {currentUser?.role === "admin" && nav("/admin", t("admin", lang))}
-        </nav>
 
         <div className="flex items-center gap-1">
           <Button

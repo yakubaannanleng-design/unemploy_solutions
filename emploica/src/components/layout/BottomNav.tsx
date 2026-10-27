@@ -43,7 +43,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
   return (
     <>
       {/* Barre inférieure (mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur flex items-center justify-around h-14">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur flex items-center justify-around h-14">
         {items.map((it) => (
           <Link key={it.to} to={it.to} className="flex flex-col items-center justify-center flex-1 text-xs text-muted-foreground hover:text-primary relative">
             <it.icon className="h-5 w-5" />
@@ -79,7 +79,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
         </Sheet>
       </nav>
       {/* Spacer pour éviter que le contenu soit masqué par la barre */}
-      <div className="md:hidden h-14" />
+      <div className="h-14" />
     </>
   );
 }
