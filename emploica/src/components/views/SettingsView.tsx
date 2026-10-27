@@ -1,4 +1,4 @@
-﻿// Vue des parametres utilisateur : apparence, compte, securite, notifications, confidentialite, a propos.
+// Vue des parametres utilisateur : apparence, compte, securite, notifications, confidentialite, a propos.
 import { useState, useEffect } from "react";
 import { Moon, Sun, Globe, LogOut, Settings as SettingsIcon, Shield, User, Phone, Mail, Bell, Info, FileText, Lock } from "lucide-react";
 import { useLang, t } from "../../lib/i18n";

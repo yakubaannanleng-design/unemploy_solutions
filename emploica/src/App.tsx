@@ -1,4 +1,4 @@
-﻿// Composant principal de l'application Workca.
+// Composant principal de l'application Workca.
 // Gestion de la navigation, de l'authentification et du routage entre les pages.
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";

@@ -1,4 +1,4 @@
-﻿// En-tête de navigation de l'application Workca.
+// En-tête de navigation de l'application Workca.
 import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";

@@ -1,4 +1,4 @@
-﻿import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { User, Mail, Lock } from "lucide-react";
 import "./auth-animated.css";
 

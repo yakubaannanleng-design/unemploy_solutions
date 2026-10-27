@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
