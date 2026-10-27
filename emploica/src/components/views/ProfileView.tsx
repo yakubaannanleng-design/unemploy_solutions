@@ -22,7 +22,7 @@ export default function ProfileView() {
   const [uploading, setUploading] = useState(false);
   const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !seeker) return;
+    if (!file || !seeker || !supabase) return;
     setUploading(true);
     try {
       const ext = file.name.split(".").pop();
@@ -41,7 +41,7 @@ export default function ProfileView() {
   
   const uploadCv = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !seeker) return;
+    if (!file || !seeker || !supabase) return;
     setUploading(true);
     try {
       const ext = file.name.split(".").pop();
