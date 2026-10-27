@@ -57,7 +57,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 
 export default function App() {
   const { lang } = useLang();
-  const { state, patch, replace, setCurrentUser, currentUser } = useStore();
+  const { state, patch, replace, update, setCurrentUser, currentUser } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAuthed, setIsAuthed] = useState<boolean>(
@@ -73,15 +73,10 @@ export default function App() {
           setCurrentUser(data.session.user.id);
           setIsAuthed(true);
         } else {
-          // 2) Fallback localStorage (comptes demo)
           const saved = window.localStorage.getItem("workca:me");
-          if (saved) {
-            setCurrentUser(saved);
-            setIsAuthed(true);
-          }
+          if (saved) { setCurrentUser(saved); setIsAuthed(true); }
         }
       });
-      // Ecoute les changements d auth Supabase
       const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user) {
           setCurrentUser(session.user.id);
@@ -89,14 +84,42 @@ export default function App() {
           window.localStorage.setItem("workca:me", session.user.id);
         }
       });
+      // 2) Chargement des donnees depuis Supabase
+      (async () => {
+        try {
+          const { data: offers } = await supabase.from("offers").select("*");
+          if (offers && offers.length > 0) {
+            const mapped = offers.map((o: any) => ({
+              id: o.id,
+              employerId: o.employer_id,
+              title: o.title,
+              description: o.description,
+              tasks: o.tasks ?? [],
+              category: o.category,
+              skills: o.skills ?? [],
+              location: { region: o.location_region, city: o.location_city, quartier: o.location_quartier, lat: o.lat, lng: o.lng },
+              contract: o.contract,
+              duration: o.duration,
+              schedule: o.schedule,
+              pay: o.pay,
+              payMode: o.pay_mode,
+              createdAt: o.created_at,
+              expiresAt: o.expires_at,
+              status: o.status,
+              boost: o.boost,
+              views: o.views,
+            }));
+            // Remplacer les offres du store
+            update("offers", mapped);
+          }
+        } catch (e) {
+          console.error("Supabase load error:", e);
+        }
+      })();
       return () => sub.subscription.unsubscribe();
     } else {
-      // Pas de Supabase : fallback localStorage uniquement
       const saved = window.localStorage.getItem("workca:me");
-      if (saved) {
-        setCurrentUser(saved);
-        setIsAuthed(true);
-      }
+      if (saved) { setCurrentUser(saved); setIsAuthed(true); }
     }
   }, []);
 
@@ -267,4 +290,5 @@ export default function App() {
     </div>
   );
 }
+
 
