@@ -1,9 +1,10 @@
-// Composant principal de l'application Workca.
+﻿// Composant principal de l'application Workca.
 // Gestion de la navigation, de l'authentification et du routage entre les pages.
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./lib/store";
 import { useLang, t } from "./lib/i18n";
+import { supabase } from "./lib/supabase";
 import Header from "./components/layout/Header";
 import BottomNav from "./components/layout/BottomNav";
 const SeekerHome = lazy(() => import("./components/home/SeekerHome"));
@@ -65,11 +66,29 @@ export default function App() {
 
   // Restaure l'utilisateur connectÃ© depuis localStorage au chargement.
   useEffect(() => {
-    const saved = window.localStorage.getItem("workca:me");
-    if (saved) {
-      setCurrentUser(saved);
-      setIsAuthed(true);
-    }
+    // 1) Session Supabase
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        setCurrentUser(data.session.user.id);
+        setIsAuthed(true);
+      } else {
+        // 2) Fallback localStorage (comptes demo)
+        const saved = window.localStorage.getItem("workca:me");
+        if (saved) {
+          setCurrentUser(saved);
+          setIsAuthed(true);
+        }
+      }
+    });
+    // Ecoute les changements d auth Supabase
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user.id);
+        setIsAuthed(true);
+        window.localStorage.setItem("workca:me", session.user.id);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const login = (user: User) => {
@@ -80,6 +99,7 @@ export default function App() {
   };
 
   const logout = () => {
+    supabase.auth.signOut();
     window.localStorage.removeItem("workca:me");
     setIsAuthed(false);
     navigate("/login");
@@ -220,8 +240,8 @@ export default function App() {
               <RequireAuth>
                 <FavoritesView />
               </RequireAuth>
-}
-            />
+            }
+          />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/recherche" element={<SearchView />} />
           <Route path="/conditions" element={<TermsView />} />
@@ -238,3 +258,4 @@ export default function App() {
     </div>
   );
 }
+
