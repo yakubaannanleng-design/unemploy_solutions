@@ -143,7 +143,35 @@ export default function App() {
   };
 
   const createOffer = (data: Omit<Offer, "id">) => {
-    patch("offers", { ...data, id: "off-" + Math.random().toString(36).slice(2, 9) });
+    const id = "off-" + Math.random().toString(36).slice(2, 9);
+    patch("offers", { ...data, id });
+    if (supabase) {
+      supabase.from("offers").insert({
+        id,
+        employer_id: data.employerId,
+        title: data.title,
+        description: data.description,
+        tasks: data.tasks,
+        category: data.category,
+        skills: data.skills,
+        location_region: data.location.region,
+        location_city: data.location.city,
+        location_quartier: data.location.quartier,
+        lat: data.location.lat,
+        lng: data.location.lng,
+        contract: data.contract,
+        duration: data.duration,
+        schedule: data.schedule,
+        pay: data.pay,
+        pay_mode: data.payMode,
+        created_at: data.createdAt,
+        status: data.status,
+        boost: data.boost,
+        views: data.views,
+      }).then(({ error }) => {
+        if (error) console.error("Supabase insert offer error:", error);
+      });
+    }
     navigate("/" + (currentUser?.role ?? "chercheur"));
   };
 
