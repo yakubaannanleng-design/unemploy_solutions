@@ -1,5 +1,5 @@
 .auth-wrap {
-  --a: var(--primary);          /* orange principal */
+  --a: #e8793a;          /* orange principal */
   --a-dark: #b8531f;     /* orange foncé */
   --a-deep: #8f3f17;     /* orange très foncé */
   --bg: #1f1f24;         /* fond carte */
