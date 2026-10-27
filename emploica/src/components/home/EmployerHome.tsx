@@ -8,10 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Separator } from "../ui/separator";
 import { Briefcase, Users, Eye, MessageSquare, Banknote, Zap, BookOpen, Star } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { useState } from "react";
+import OfferForm from "../offers/OfferForm";
+import type { Offer } from "../../types";
 
 export default function EmployerHome() {
   const { lang } = useLang();
   const { state, patch, replace, update, currentUser } = useStore();
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const myOffers = state.offers.filter((o) => o.employerId === currentUser.id);
   const myApps = state.applications.filter((a) =>
     myOffers.some((o) => o.id === a.offerId)
@@ -65,6 +69,33 @@ export default function EmployerHome() {
 
 
 
+  const deleteOffer = (id: string) => {
+    if (!window.confirm(lang === "fr" ? "Supprimer cette offre ?" : "Delete this offer?")) return;
+    update("offers", state.offers.filter((o) => o.id !== id));
+    update("applications", state.applications.filter((a) => a.offerId !== id));
+  };
+
+  const saveEdit = (data: Omit<Offer, "id">) => {
+    if (!editingOffer) return;
+    update("offers", state.offers.map((o) => (o.id === editingOffer.id ? { ...data, id: editingOffer.id } : o)));
+    setEditingOffer(null);
+  };
+
+
+  if (editingOffer) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">{lang === "fr" ? "Modifier l'offre" : "Edit offer"}</h2>
+        <OfferForm
+          initial={editingOffer}
+          onSubmit={saveEdit}
+          onCancel={() => setEditingOffer(null)}
+        />
+      </div>
+    );
+  }
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -115,6 +146,12 @@ export default function EmployerHome() {
                     >
                       {t("status" + o.status.charAt(0).toUpperCase() + o.status.slice(1), lang) ?? o.status}
                     </Badge>
+                    <Button size="sm" variant="outline" onClick={() => setEditingOffer(o)}>
+                      {t("edit", lang)}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-red-600" onClick={() => deleteOffer(o.id)}>
+                      {t("delete", lang)}
+                    </Button>
                     {!o.boost && (
                       <Button size="sm" variant="secondary" onClick={() => boost(o)}>
                         <Zap className="h-3 w-3 mr-1" /> {t("boost", lang)}
