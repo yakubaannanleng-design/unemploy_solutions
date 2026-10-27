@@ -5,7 +5,7 @@ import { useLang, t } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { Button } from "../ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { Home, Briefcase, MessageSquare, User, MoreVertical, Settings, Heart, Bell, Zap, Shield, PlusCircle, LogOut } from "lucide-react";
+import { Home, Briefcase, MessageSquare, User, MoreVertical, Settings, Heart, Bell, Zap, Shield, PlusCircle, LogOut, Search } from "lucide-react";
 
 interface BottomNavProps {
   currentUser: any;
@@ -32,6 +32,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
   ];
 
   const moreItems = [
+    { to: "/recherche", icon: Search, label: lang === "fr" ? "Recherche" : "Search" },
     { to: "/favoris", icon: Heart, label: t("favorites", lang) },
     { to: "/parametres", icon: Settings, label: t("settings", lang) },
     { to: "/notifications", icon: Bell, label: t("notifications", lang) },

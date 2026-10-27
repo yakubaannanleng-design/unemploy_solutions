@@ -1,5 +1,5 @@
 ﻿// En-tête de navigation de l'application Workca.
-import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart } from "lucide-react";
+import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart, Search } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLang, t } from "../../lib/i18n";
@@ -68,7 +68,11 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
             <Globe className="h-4 w-4" />
           </Button>
 
-          {currentUser ? (
+           <Button variant="ghost" size="icon" title={lang === "fr" ? "Recherche" : "Search"} aria-label="Search">
+             <Link to="/recherche"><Search className="h-4 w-4" /></Link>
+           </Button>
+
+{currentUser ? (
             <>
               <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                 <Bell className="h-4 w-4" />
