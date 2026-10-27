@@ -5,6 +5,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-
 import { useStore } from "./lib/store";
 import { useLang, t } from "./lib/i18n";
 import Header from "./components/layout/Header";
+import BottomNav from "./components/layout/BottomNav";
 const SeekerHome = lazy(() => import("./components/home/SeekerHome"));
 const EmployerHome = lazy(() => import("./components/home/EmployerHome"));
 const AdminPanel = lazy(() => import("./components/home/AdminPanel"));
@@ -231,6 +232,7 @@ export default function App() {
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
         <div className="container">{t("antiScam", lang)} {"\u00B7"} {"\u00A9"} {new Date().getFullYear()} MADI OUMAROU YAKUBA {"\u2014"} Workca</div>
       </footer>
+      {isAuthed && <BottomNav currentUser={currentUser} />}
     </div>
   );
 }

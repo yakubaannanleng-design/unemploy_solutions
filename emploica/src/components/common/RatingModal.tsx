@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Star } from "lucide-react";
 import { useLang, t } from "../../lib/i18n";
 import { Button } from "../ui/button";
