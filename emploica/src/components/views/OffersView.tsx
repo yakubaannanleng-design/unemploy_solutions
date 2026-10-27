@@ -1,6 +1,7 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../../lib/store";
+import { supabase } from "../../lib/supabase";
 import { useLang, t } from "../../lib/i18n";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -48,21 +49,40 @@ export default function OffersView() {
   const apply = (offer: Offer) => {
     const exists = state.applications.some((a) => a.offerId === offer.id && a.seekerId === mine);
     if (exists) return;
+    const appId = "app-" + Math.random().toString(36).slice(2, 9);
+    const notifId = "notif-" + Math.random().toString(36).slice(2, 9);
     patch("applications", {
-      id: "app-" + Math.random().toString(36).slice(2, 9),
+      id: appId,
       offerId: offer.id,
       seekerId: mine,
-      status: "envoyÃ©e",
+      status: "envoyée",
       createdAt: new Date().toISOString(),
     });
     patch("notifications", {
-      id: "notif-" + Math.random().toString(36).slice(2, 9),
+      id: notifId,
       userId: offer.employerId,
       type: "candidature",
-      body: `${currentUser.name} a candidatÃ© Ã  Â« ${offer.title} Â».`,
+      body: `${currentUser.name} a candidaté à « ${offer.title} ».` ,
       createdAt: new Date().toISOString(),
       read: false,
     });
+    if (supabase) {
+      supabase.from("applications").insert({
+        id: appId,
+        offer_id: offer.id,
+        seeker_id: mine,
+        status: "envoyee",
+        created_at: new Date().toISOString(),
+      }).then(({ error }) => { if (error) console.error("Supabase insert application error:", error); });
+      supabase.from("notifications").insert({
+        id: notifId,
+        user_id: offer.employerId,
+        type: "candidature",
+        body: `${currentUser.name} a candidaté à « ${offer.title} ».` ,
+        created_at: new Date().toISOString(),
+        read: false,
+      }).then(({ error }) => { if (error) console.error("Supabase insert notification error:", error); });
+    }
     setSelected(offer);
   };
 

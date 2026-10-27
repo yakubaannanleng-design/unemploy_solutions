@@ -1,5 +1,6 @@
 // Composant de l interface utilisateur
 import { useStore } from "../../lib/store";
+import { supabase } from "../../lib/supabase";
 import { useLang, t } from "../../lib/i18n";
 import { Link } from "react-router-dom";
 import { Badge } from "../ui/badge";
@@ -64,6 +65,27 @@ export default function EmployerHome() {
         createdAt: new Date().toISOString(),
         read: false,
       });
+    if (app && supabase) {
+      supabase.from("applications").update({ status }).eq("id", appId).then(({ error }) => {
+        if (error) console.error("Supabase update application error:", error);
+      });
+      supabase.from("notifications").insert({
+        id: "notif-" + Math.random().toString(36).slice(2, 9),
+        user_id: app.seekerId,
+        type: "candidature",
+        body:
+          status === "retenue"
+            ? `Votre candidature a été retenue par ${currentUser.name}.`
+            : status === "refusée"
+            ? `Votre candidature a été refusée par ${currentUser.name}.`
+            : `Votre candidature a été consultée par ${currentUser.name}.`,
+        created_at: new Date().toISOString(),
+        read: false,
+      }).then(({ error }) => {
+        if (error) console.error("Supabase insert notification error:", error);
+      });
+    }
+
     }
   };
 

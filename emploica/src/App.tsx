@@ -85,37 +85,83 @@ export default function App() {
         }
       });
       // 2) Chargement des donnees depuis Supabase
-      (async () => {
-        try {
-          const { data: offers } = await supabase.from("offers").select("*");
-          if (offers && offers.length > 0) {
-            const mapped = offers.map((o: any) => ({
-              id: o.id,
-              employerId: o.employer_id,
-              title: o.title,
-              description: o.description,
-              tasks: o.tasks ?? [],
-              category: o.category,
-              skills: o.skills ?? [],
-              location: { region: o.location_region, city: o.location_city, quartier: o.location_quartier, lat: o.lat, lng: o.lng },
-              contract: o.contract,
-              duration: o.duration,
-              schedule: o.schedule,
-              pay: o.pay,
-              payMode: o.pay_mode,
-              createdAt: o.created_at,
-              expiresAt: o.expires_at,
-              status: o.status,
-              boost: o.boost,
-              views: o.views,
-            }));
-            // Remplacer les offres du store
-            update("offers", mapped);
-          }
-        } catch (e) {
-          console.error("Supabase load error:", e);
-        }
-      })();
+       (async () => {
+         try {
+           const [{ data: offers }, { data: applications }, { data: conversations }, { data: messages }, { data: notifications }] = await Promise.all([
+             supabase.from("offers").select("*"),
+             supabase.from("applications").select("*"),
+             supabase.from("conversations").select("*"),
+             supabase.from("messages").select("*"),
+             supabase.from("notifications").select("*"),
+           ]);
+           if (offers && offers.length > 0) {
+             const mapped = offers.map((o: any) => ({
+               id: o.id,
+               employerId: o.employer_id,
+               title: o.title,
+               description: o.description,
+               tasks: o.tasks ?? [],
+               category: o.category,
+               skills: o.skills ?? [],
+               location: { region: o.location_region, city: o.location_city, quartier: o.location_quartier, lat: o.lat, lng: o.lng },
+               contract: o.contract,
+               duration: o.duration,
+               schedule: o.schedule,
+               pay: o.pay,
+               payMode: o.pay_mode,
+               createdAt: o.created_at,
+               expiresAt: o.expires_at,
+               status: o.status,
+               boost: o.boost,
+               views: o.views,
+             }));
+             update("offers", mapped);
+           }
+           if (applications && applications.length > 0) {
+             const mapped = applications.map((a: any) => ({
+               id: a.id,
+               offerId: a.offer_id,
+               seekerId: a.seeker_id,
+               status: a.status,
+               createdAt: a.created_at,
+             }));
+             update("applications", mapped);
+           }
+           if (conversations && conversations.length > 0) {
+             const msgsByConv: Record<string, any[]> = {};
+             (messages ?? []).forEach((m: any) => {
+               if (!msgsByConv[m.conversation_id]) msgsByConv[m.conversation_id] = [];
+               msgsByConv[m.conversation_id].push({
+                 id: m.id,
+                 senderId: m.sender_id,
+                 receiverId: m.receiver_id,
+                 body: m.body,
+                 createdAt: m.created_at,
+                 status: m.status,
+               });
+             });
+             const mapped = conversations.map((c: any) => ({
+               id: c.id,
+               participants: c.participants,
+               messages: msgsByConv[c.id] ?? [],
+             }));
+             update("conversations", mapped);
+           }
+           if (notifications && notifications.length > 0) {
+             const mapped = notifications.map((n: any) => ({
+               id: n.id,
+               userId: n.user_id,
+               type: n.type,
+               body: n.body,
+               createdAt: n.created_at,
+               read: n.read,
+             }));
+             update("notifications", mapped);
+           }
+         } catch (e) {
+           console.error("Supabase load error:", e);
+         }
+       })();
       return () => sub.subscription.unsubscribe();
     } else {
       const saved = window.localStorage.getItem("workca:me");

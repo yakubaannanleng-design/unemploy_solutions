@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../../lib/store";
+import { supabase } from "../../lib/supabase";
 import { useLang, t } from "../../lib/i18n";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -45,6 +46,30 @@ export default function Messaging({ conversationId, otherId }: MessagingProps) {
       status: "envoyé",
     };
     replace("conversations", { ...conv, messages: [...conv.messages, msg] });
+    if (supabase) {
+      supabase.from("messages").insert({
+        id: msg.id,
+        conversation_id: conv.id,
+        sender_id: msg.senderId,
+        receiver_id: msg.receiverId,
+        body: msg.body,
+        created_at: msg.createdAt,
+        status: "envoye",
+      }).then(({ error }) => {
+        if (error) console.error("Supabase insert message error:", error);
+      });
+      // Créer la conversation si absente
+      const exists = state.conversations.some((c) => c.id === conv!.id);
+      if (!exists) {
+        supabase.from("conversations").insert({
+          id: conv.id,
+          participants: conv.participants,
+          created_at: new Date().toISOString(),
+        }).then(({ error }) => {
+          if (error) console.error("Supabase insert conversation error:", error);
+        });
+      }
+    }
     setText("");
   };
 
