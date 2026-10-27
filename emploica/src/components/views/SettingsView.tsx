@@ -1,4 +1,4 @@
-// Vue des parametres utilisateur : apparence, compte, securite, notifications, confidentialite, a propos.
+﻿// Vue des parametres utilisateur : apparence, compte, securite, notifications, confidentialite, a propos.
 import { useState, useEffect } from "react";
 import { Moon, Sun, Globe, LogOut, Settings as SettingsIcon, Shield, User, Phone, Mail, Bell, Info, FileText, Lock } from "lucide-react";
 import { useLang, t } from "../../lib/i18n";
@@ -72,11 +72,11 @@ export default function SettingsView() {
   const [messagesEnabled, setMessagesEnabled] = useState(() => {
     try { return window.localStorage.getItem("workca:messages") !== "off"; } catch { return true; }
   });
+  const [twoFa, setTwoFa] = useState(false);
+  const [twoFaCode, setTwoFaCode] = useState("");
   const togglePref = (key: string, v: boolean, setter: (b: boolean) => void) => {
     setter(v);
     try { window.localStorage.setItem(key, v ? "on" : "off"); } catch {}
-  const [twoFa, setTwoFa] = useState(false);
-  const [twoFaCode, setTwoFaCode] = useState("");
 
   };
 
@@ -150,17 +150,16 @@ export default function SettingsView() {
             <span className="text-sm">{lang === "fr" ? "Recevoir des messages" : "Receive messages"}</span>
             <Switch checked={messagesEnabled} onCheckedChange={(v) => togglePref("workca:messages", v, setMessagesEnabled)} />
           </div>
-        </CardContent>
-      </Card>
-
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-sm">{lang === "fr" ? "Authentification a deux facteurs (2FA)" : "Two-factor authentication (2FA)"}</span>
-            <Switch checked={twoFa} onCheckedChange={setTwoFa} />
-          </div>
-          {twoFa && (
-            <Input placeholder={lang === "fr" ? "Code a 6 chiffres" : "6-digit code"} value={twoFaCode} onChange={(e) => setTwoFaCode(e.target.value)} />
-          )}
+           <Separator />
+           <div className="flex items-center justify-between">
+             <span className="text-sm">{lang === "fr" ? "Authentification a deux facteurs (2FA)" : "Two-factor authentication (2FA)"}</span>
+             <Switch checked={twoFa} onCheckedChange={setTwoFa} />
+           </div>
+           {twoFa && (
+             <Input placeholder={lang === "fr" ? "Code a 6 chiffres" : "6-digit code"} value={twoFaCode} onChange={(e) => setTwoFaCode(e.target.value)} />
+           )}
+         </CardContent>
+       </Card>
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-4 w-4" /> {t("notifications", lang)}</CardTitle></CardHeader>
