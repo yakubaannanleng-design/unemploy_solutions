@@ -218,8 +218,8 @@ export default function App() {
               <RequireAuth>
                 <FavoritesView />
               </RequireAuth>
-            }
-          />
+}
+            />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/conditions" element={<TermsView />} />
           <Route path="/confidentialite" element={<PrivacyView />} />
@@ -229,7 +229,7 @@ export default function App() {
         </Suspense>
       </main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        <div className="container">{t("antiScam", lang)} Â· Â© {new Date().getFullYear()} MADI OUMAROU YAKUBA â€” Workca</div>
+        <div className="container">{t("antiScam", lang)} {"\u00B7"} {"\u00A9"} {new Date().getFullYear()} MADI OUMAROU YAKUBA {"\u2014"} Workca</div>
       </footer>
     </div>
   );
