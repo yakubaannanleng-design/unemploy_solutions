@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Switch } from "../ui/switch";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
+import { Link } from "react-router-dom";
 import { Label } from "../ui/label";
 
 export default function SettingsView() {
@@ -32,11 +33,20 @@ export default function SettingsView() {
   const [name, setName] = useState(myUser.name);
   const [phone, setPhone] = useState(myUser.phone);
   const [email, setEmail] = useState(myUser.email ?? "");
+  const deleteAccount = () => {
+    if (!window.confirm(lang === "fr" ? "Supprimer définitivement votre compte ?" : "Permanently delete your account?")) return;
+    update("users", state.users.filter((u) => u.id !== currentUser.id));
+    update("seekers", state.seekers.filter((s) => s.userId !== currentUser.id));
+    update("employers", state.employers.filter((e) => e.userId !== currentUser.id));
+    window.localStorage.removeItem("workca:me");
+    window.location.href = "/login";
+  };
   const saveAccount = () => {
     update("users", state.users.map((u) =>
       u.id === currentUser.id ? { ...u, name, phone, email: email || undefined } : u
     ));
   };
+
 
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -65,6 +75,9 @@ export default function SettingsView() {
   const togglePref = (key: string, v: boolean, setter: (b: boolean) => void) => {
     setter(v);
     try { window.localStorage.setItem(key, v ? "on" : "off"); } catch {}
+  const [twoFa, setTwoFa] = useState(false);
+  const [twoFaCode, setTwoFaCode] = useState("");
+
   };
 
   return (
@@ -111,6 +124,9 @@ export default function SettingsView() {
             {lang === "fr" ? "Role" : "Role"} : {currentUser.role} . {lang === "fr" ? "Statut" : "Status"} : {myUser.status}
           </div>
           <Button onClick={saveAccount}>{t("save", lang)}</Button>
+          <Button variant="destructive" size="sm" onClick={deleteAccount}>
+            {lang === "fr" ? "Supprimer mon compte" : "Delete my account"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -137,6 +153,15 @@ export default function SettingsView() {
         </CardContent>
       </Card>
 
+          <Separator />
+          <div className="flex items-center justify-between">
+            <span className="text-sm">{lang === "fr" ? "Authentification a deux facteurs (2FA)" : "Two-factor authentication (2FA)"}</span>
+            <Switch checked={twoFa} onCheckedChange={setTwoFa} />
+          </div>
+          {twoFa && (
+            <Input placeholder={lang === "fr" ? "Code a 6 chiffres" : "6-digit code"} value={twoFaCode} onChange={(e) => setTwoFaCode(e.target.value)} />
+          )}
+
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-4 w-4" /> {t("notifications", lang)}</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-between">
@@ -153,15 +178,15 @@ export default function SettingsView() {
           <div className="font-medium text-foreground">{lang === "fr" ? "Proprietaire / Developpeur" : "Owner / Developer"} : MADI OUMAROU YAKUBA</div>
 
           <Separator />
-          <button className="text-primary hover:underline flex items-center gap-1" type="button">
+          <Link to="/conditions" className="text-primary hover:underline flex items-center gap-1">
             <FileText className="h-3 w-3" /> {lang === "fr" ? "Conditions d'utilisation" : "Terms of use"}
-          </button>
-          <button className="text-primary hover:underline flex items-center gap-1" type="button">
+          </Link>
+          <Link to="/confidentialite" className="text-primary hover:underline flex items-center gap-1">
             <FileText className="h-3 w-3" /> {lang === "fr" ? "Politique de confidentialite" : "Privacy policy"}
-          </button>
-          <button className="text-primary hover:underline flex items-center gap-1" type="button">
+          </Link>
+          <Link to="/licences" className="text-primary hover:underline flex items-center gap-1">
             <FileText className="h-3 w-3" /> {lang === "fr" ? "Licences open source" : "Open source licenses"}
-          </button>
+          </Link>
         </CardContent>
       </Card>
 

@@ -18,6 +18,19 @@ export default function SeekerHome() {
   const recommended = state.offers
     .filter((o) => o.status === "publiée")
     .filter((o) => !seeker || seeker.categories.length === 0 || seeker.categories.includes(o.category))
+    .filter((o) => {
+      if (!seeker?.zone?.lat || !seeker?.zone?.lng || !o.location?.lat || !o.location?.lng) return true;
+      const R = 6371;
+      const dLat = ((o.location.lat - seeker.zone.lat) * Math.PI) / 180;
+      const dLng = ((o.location.lng - seeker.zone.lng) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((seeker.zone.lat * Math.PI) / 180) *
+          Math.cos((o.location.lat * Math.PI) / 180) *
+          Math.sin(dLng / 2) ** 2;
+      const d = 2 * R * Math.asin(Math.sqrt(a));
+      return d <= (seeker.radiusKm || 50);
+    })
     .slice(0, 3);
 
   return (

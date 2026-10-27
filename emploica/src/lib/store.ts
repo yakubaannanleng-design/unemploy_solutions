@@ -32,8 +32,10 @@ import {
 import { TRAININGS } from "../data/trainings";
 
 const STORE_KEY = "workca:v1";
+const STORE_VERSION = 2;
 
 interface StoreState {
+  version: number;
   currentUserId: string;
   users: User[];
   seekers: SeekerProfile[];
@@ -55,6 +57,7 @@ const StoreContext = createContext<StoreApi | null>(null);
 
 function defaultState(): StoreState {
   return {
+    version: STORE_VERSION,
     currentUserId: DEMO_USERS[0].id,
     users: DEMO_USERS,
     seekers: DEMO_SEEKERS,
@@ -77,7 +80,11 @@ function load(): StoreState {
     const raw = window.localStorage.getItem(STORE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<StoreState>;
-      return { ...defaultState(), ...parsed };
+      if (parsed.version !== STORE_VERSION) {
+        // Migration : réinitialise l'état avec les nouvelles valeurs par défaut.
+        return defaultState();
+      }
+      return { ...defaultState(), ...parsed, version: STORE_VERSION };
     }
   } catch {
     /* ignore */

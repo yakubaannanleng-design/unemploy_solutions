@@ -1,26 +1,29 @@
-// Composant principal de l'application Workca.
+﻿// Composant principal de l'application Workca.
 // Gestion de la navigation, de l'authentification et du routage entre les pages.
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./lib/store";
 import { useLang, t } from "./lib/i18n";
 import Header from "./components/layout/Header";
-import SeekerHome from "./components/home/SeekerHome";
-import EmployerHome from "./components/home/EmployerHome";
-import AdminPanel from "./components/home/AdminPanel";
-import OffersView from "./components/views/OffersView";
-import MessagesView from "./components/views/MessagesView";
-import ProfileView from "./components/views/ProfileView";
-import OfferForm from "./components/offers/OfferForm";
-import NotificationsView from "./components/views/NotificationsView";
-import FlashOffersView from "./components/home/FlashOffersView";
-import SettingsView from "./components/views/SettingsView";
-import FavoritesView from "./components/views/FavoritesView";
+const SeekerHome = lazy(() => import("./components/home/SeekerHome"));
+const EmployerHome = lazy(() => import("./components/home/EmployerHome"));
+const AdminPanel = lazy(() => import("./components/home/AdminPanel"));
+const OffersView = lazy(() => import("./components/views/OffersView"));
+const MessagesView = lazy(() => import("./components/views/MessagesView"));
+const ProfileView = lazy(() => import("./components/views/ProfileView"));
+const OfferForm = lazy(() => import("./components/offers/OfferForm"));
+const NotificationsView = lazy(() => import("./components/views/NotificationsView"));
+const FlashOffersView = lazy(() => import("./components/home/FlashOffersView"));
+const SettingsView = lazy(() => import("./components/views/SettingsView"));
+const FavoritesView = lazy(() => import("./components/views/FavoritesView"));
+const TermsView = lazy(() => import("./components/views/TermsView"));
+const PrivacyView = lazy(() => import("./components/views/PrivacyView"));
+const LicensesView = lazy(() => import("./components/views/LicensesView"));
 import type { User, Offer, Rating } from "./types";
 import { DEMO_USERS } from "./data/mockData";
-import AuthPage from "./pages/AuthPage";
+const AuthPage = lazy(() => import("./pages/AuthPage"));
 
-// Liste des routes qui nécessitent d'être connecté.
+// Liste des routes qui nÃ©cessitent d'Ãªtre connectÃ©.
 const PROTECTED_ROUTES = [
   "/chercheur",
   "/employeur",
@@ -35,7 +38,7 @@ const PROTECTED_ROUTES = [
   "/favoris",
 ];
 
-// Wrapper qui protège une route : redirige vers /login si l'utilisateur n'est pas connecté.
+// Wrapper qui protÃ¨ge une route : redirige vers /login si l'utilisateur n'est pas connectÃ©.
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthed = window.localStorage.getItem("workca:me") !== null;
   const navigate = useNavigate();
@@ -58,7 +61,7 @@ export default function App() {
     () => window.localStorage.getItem("workca:me") !== null
   );
 
-  // Restaure l'utilisateur connecté depuis localStorage au chargement.
+  // Restaure l'utilisateur connectÃ© depuis localStorage au chargement.
   useEffect(() => {
     const saved = window.localStorage.getItem("workca:me");
     if (saved) {
@@ -99,7 +102,7 @@ export default function App() {
       type: "boost",
       amount: 500,
       operator: "Orange Money",
-      status: "réussi",
+      status: "rÃ©ussi",
       createdAt: new Date().toISOString(),
     });
   };
@@ -108,8 +111,8 @@ export default function App() {
     patch("ratings", { ...r, id: "rt-" + Math.random().toString(36).slice(2, 9) } as Rating);
   };
 
-  // Si l'utilisateur est connecté et arrive sur la page d'accueil ou /login,
-  // on le redirige vers son tableau de bord selon son rôle.
+  // Si l'utilisateur est connectÃ© et arrive sur la page d'accueil ou /login,
+  // on le redirige vers son tableau de bord selon son rÃ´le.
   if (isAuthed && currentUser && (location.pathname === "/" || location.pathname === "/login")) {
     return <Navigate to={"/" + currentUser.role} replace />;
   }
@@ -123,6 +126,7 @@ export default function App() {
         demoUsers={DEMO_USERS}
       />
       <main className="container py-6">
+        <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Chargement…</div>}>
         <Routes>
           <Route path="/login" element={<AuthPage onLogin={login} />} />
           <Route
@@ -214,11 +218,15 @@ export default function App() {
             }
           />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/conditions" element={<TermsView />} />
+          <Route path="/confidentialite" element={<PrivacyView />} />
+          <Route path="/licences" element={<LicensesView />} />
           <Route path="*" element={<AuthPage onLogin={login} />} />
         </Routes>
+        </Suspense>
       </main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        <div className="container">{t("antiScam", lang)} · © {new Date().getFullYear()} MADI OUMAROU YAKUBA — Workca</div>
+        <div className="container">{t("antiScam", lang)} Â· Â© {new Date().getFullYear()} MADI OUMAROU YAKUBA â€” Workca</div>
       </footer>
     </div>
   );

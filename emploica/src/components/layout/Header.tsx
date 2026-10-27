@@ -92,7 +92,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers 
 
           {currentUser ? (
             <>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                 <Bell className="h-4 w-4" />
                 {unread > 0 && (
                  <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
