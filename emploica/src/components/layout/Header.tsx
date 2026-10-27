@@ -1,9 +1,7 @@
-// En-tête de navigation de l'application Workca.
-// Contient le logo, le statut de connexion, les liens de navigation, le sélecteur de langue,
-// le menu utilisateur déroulant et le menu mobile.
+﻿// En-tête de navigation de l'application Workca.
 import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useLang, t } from "../../lib/i18n";
 import Logo from "./Logo";
 import { Button } from "../ui/button";
@@ -16,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { useStore } from "../../lib/store";
 import type { User as UserType } from "../../types";
 
 interface HeaderProps {
@@ -24,22 +21,14 @@ interface HeaderProps {
   onLogout: () => void;
   onSwitchUser: (id: string) => void;
   demoUsers: UserType[];
+  unreadCount?: number;
 }
 
-  const location = useLocation();
-  const [open, setOpen] = useState(false);
-
-export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers }: HeaderProps) {
+export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers, unreadCount = 0 }: HeaderProps) {
   const { lang, setLang } = useLang();
-  const { state } = useStore();
-  const unread = currentUser
-    ? state.conversations.reduce(
-        (n, c) =>
-          n +
-          c.messages.filter((m) => m.receiverId === currentUser.id && m.status !== "lu").length,
-        0
-      )
-    : 0;
+  const location = { pathname: typeof window !== "undefined" ? window.location.pathname : "/" };
+  const [open, setOpen] = useState(false);
+  const unread = unreadCount;
 
   const nav = (to: string, label: string) => (
     <Link
@@ -95,10 +84,10 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers 
               <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                 <Bell className="h-4 w-4" />
                 {unread > 0 && (
-                 <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
-                   {unread}
-                 </span>
-               )}
+                  <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                    {unread}
+                  </span>
+                )}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
