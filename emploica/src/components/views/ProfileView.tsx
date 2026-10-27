@@ -9,6 +9,7 @@ import { Separator } from "../ui/separator";
 import { User, Building2, ShieldCheck, MapPin, Briefcase, Star, BookOpen } from "lucide-react";
 import { categoryById } from "../../data/categories";
 import ProfileEditor from "./ProfileEditor";
+import { supabase } from "../../lib/supabase";
 import { TRAININGS } from "../../data/trainings";
 
 export default function ProfileView() {
@@ -18,6 +19,26 @@ export default function ProfileView() {
   const seeker = state.seekers.find((s) => s.userId === mine);
   const emp = state.employers.find((e) => e.userId === mine);
   const isEmployer = currentUser.role === "employeur";
+  const [uploading, setUploading] = useState(false);
+  const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !seeker) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${currentUser.id}/avatar.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = data.publicUrl;
+      update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
+    } catch (err: any) {
+      alert(err?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const [editing, setEditing] = useState(false);
 
 
@@ -109,9 +130,22 @@ export default function ProfileView() {
         <CardHeader><CardTitle>{t("jobSeeker", lang)}</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold">
-              {currentUser.name.charAt(0)}
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold overflow-hidden">
+              {seeker.photo ? (
+                <img src={seeker.photo} alt={currentUser.name} className="h-full w-full object-cover" />
+              ) : (
+                currentUser.name.charAt(0)
+              )}
             </div>
+            <div className="mt-3">
+              <label className="text-xs text-muted-foreground cursor-pointer">
+                <input type="file" accept="image/*" onChange={uploadPhoto} disabled={uploading} className="hidden" />
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-input text-sm hover:bg-accent cursor-pointer">
+                  {uploading ? (lang === "fr" ? "Téléchargement..." : "Uploading...") : (lang === "fr" ? "Changer la photo" : "Change photo")}
+                </span>
+              </label>
+            </div>
+
             <div>
               <div className="font-medium flex items-center gap-2">
                 {currentUser.name}
