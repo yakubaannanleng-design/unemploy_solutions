@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Link } from "react-router-dom";
@@ -34,6 +34,11 @@ export default function ProfileView() {
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
     } catch (err: any) {
       alert(err?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+  
   const uploadCv = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !seeker) return;
@@ -47,11 +52,6 @@ export default function ProfileView() {
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, cvUrl: data.publicUrl } : s)));
     } catch (err: any) {
       alert(err?.message ?? "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
-
     } finally {
       setUploading(false);
     }
