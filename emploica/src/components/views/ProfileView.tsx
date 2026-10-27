@@ -22,21 +22,49 @@ export default function ProfileView() {
   const emp = state.employers.find((e) => e.userId === mine);
   const isEmployer = currentUser.role === "employeur";
   const [uploading, setUploading] = useState(false);
+  const compressImage = (file: File, maxSize = 1024): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let w = img.width;
+          let h = img.height;
+          if (w > maxSize || h > maxSize) {
+            if (w > h) { h = Math.round((h * maxSize) / w); w = maxSize; }
+            else { w = Math.round((w * maxSize) / h); h = maxSize; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((blob) => {
+            if (blob) resolve(new File([blob], file.name, { type: "image/jpeg" }));
+            else resolve(file);
+          }, "image/jpeg", 0.8);
+        };
+        img.src = ev.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
   const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !seeker || !supabase) return;
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
+      const compressed = await compressImage(file);
+      const ext = "jpg";
       const path = `${currentUser.id}/avatar.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, compressed, { upsert: true });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = data.publicUrl;
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
       toast.success(lang === "fr" ? "Photo mise à jour." : "Photo updated.");
     } catch (err: any) {
-      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again."));
+      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer la photo, réessaie." : "Could not upload photo, try again."));
     } finally {
       setUploading(false);
     }
