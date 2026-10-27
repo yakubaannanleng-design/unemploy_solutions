@@ -15,7 +15,7 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
 
   const handleLogin = async (values: { username: string; password: string }) => {
     // 1) Tentative Supabase Auth (email)
-    if (values.username.includes("@")) {
+    if (supabase && values.username.includes("@")) {
       try {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email: values.username,
@@ -71,8 +71,9 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
       return;
     }
     // 1) Supabase Auth
-    const email = values.email || `${username.replace(/\s+/g, "").toLowerCase()}@workca.local`;
-    try {
+    if (supabase) {
+      const email = values.email || `${username.replace(/\s+/g, "").toLowerCase()}@workca.local`;
+      try {
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -111,6 +112,8 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
     } catch {
       /* fallback local */
     }
+    }
+
 
     // 2) Fallback local
     const newUser: User = {
