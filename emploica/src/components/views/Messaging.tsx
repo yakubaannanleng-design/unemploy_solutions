@@ -73,6 +73,9 @@ export default function Messaging({ conversationId, otherId }: MessagingProps) {
                   }`}
                 >
                   {m.body}
+                  <div className={`text-[10px] mt-1 opacity-70 ${mine ? "text-right" : ""}`}>
+                    {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </div>
                 </div>
               </div>
             );

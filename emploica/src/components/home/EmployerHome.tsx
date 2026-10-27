@@ -1,4 +1,4 @@
-// Composant de l interface utilisateur
+﻿// Composant de l interface utilisateur
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Link } from "react-router-dom";
@@ -7,8 +7,8 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Separator } from "../ui/separator";
 import { Briefcase, Users, Eye, MessageSquare, Banknote, Zap, BookOpen, Star } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
+const EmployerCharts = lazy(() => import("./EmployerCharts"));
 import OfferForm from "../offers/OfferForm";
 import type { Offer } from "../../types";
 
@@ -24,12 +24,12 @@ export default function EmployerHome() {
   const totalViews = myOffers.reduce((s, o) => s + o.views, 0);
   const totalBoosts = state.transactions.filter((t) => t.type === "boost" && t.userId === currentUser.id).length;
 
-  // Données pour les graphiques du tableau de bord.
-  const appsByStatus = ["envoyée", "consultée", "retenue", "refusée"].map((st) => ({
+  // DonnÃ©es pour les graphiques du tableau de bord.
+  const appsByStatus = ["envoyÃ©e", "consultÃ©e", "retenue", "refusÃ©e"].map((st) => ({
     name: st,
     value: myApps.filter((a) => a.status === st).length,
   }));
-  const offersByStatus = ["publiée", "en-attente", "clôturée"].map((st) => ({
+  const offersByStatus = ["publiÃ©e", "en-attente", "clÃ´turÃ©e"].map((st) => ({
     name: st,
     value: myOffers.filter((o) => o.status === st).length,
   }));
@@ -43,11 +43,11 @@ export default function EmployerHome() {
       type: "boost",
       amount: 500,
       operator: "Orange Money",
-      status: "réussi",
+      status: "rÃ©ussi",
       createdAt: new Date().toISOString(),
     } as any);
   };
-  const updateApplicationStatus = (appId: string, status: "consultée" | "retenue" | "refusée") => {
+  const updateApplicationStatus = (appId: string, status: "consultÃ©e" | "retenue" | "refusÃ©e") => {
     update("applications", state.applications.map((a) => (a.id === appId ? { ...a, status } : a)));
     const app = state.applications.find((a) => a.id === appId);
     if (app) {
@@ -57,10 +57,10 @@ export default function EmployerHome() {
         type: "candidature",
         body:
           status === "retenue"
-            ? `Votre candidature a été retenue par ${currentUser.name}.`
-            : status === "refusée"
-            ? `Votre candidature a été refusée par ${currentUser.name}.`
-            : `Votre candidature a été consultée par ${currentUser.name}.`,
+            ? `Votre candidature a Ã©tÃ© retenue par ${currentUser.name}.`
+            : status === "refusÃ©e"
+            ? `Votre candidature a Ã©tÃ© refusÃ©e par ${currentUser.name}.`
+            : `Votre candidature a Ã©tÃ© consultÃ©e par ${currentUser.name}.`,
         createdAt: new Date().toISOString(),
         read: false,
       });
@@ -100,7 +100,7 @@ export default function EmployerHome() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">{t("employer", lang)} — {currentUser.name}</h2>
+          <h2 className="text-xl font-semibold">{t("employer", lang)} â€” {currentUser.name}</h2>
           <p className="text-sm text-muted-foreground">
             {state.employers.find((e) => e.userId === currentUser.id)?.orgName ?? ""}
           </p>
@@ -135,13 +135,13 @@ export default function EmployerHome() {
                   <div>
                     <div className="font-medium">{o.title}</div>
                     <div className="text-xs text-muted-foreground">
-                      {o.location.city} · {o.contract} · {o.views} {t("views", lang) ?? "vues"}
+                      {o.location.city} Â· {o.contract} Â· {o.views} {t("views", lang) ?? "vues"}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
                       variant={
-                        o.status === "publiée" ? "default" : o.status === "en-attente" ? "secondary" : "outline"
+                        o.status === "publiÃ©e" ? "default" : o.status === "en-attente" ? "secondary" : "outline"
                       }
                     >
                       {t("status" + o.status.charAt(0).toUpperCase() + o.status.slice(1), lang) ?? o.status}
@@ -168,57 +168,13 @@ export default function EmployerHome() {
           )}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader><CardTitle>{t("stats", lang) ?? "Statistiques"}</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="h-64">
-              <p className="text-sm font-medium mb-2">{t("applications", lang)}</p>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={appsByStatus}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" fontSize={10} />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(20 80% 48%)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="h-64">
-              <p className="text-sm font-medium mb-2">{t("offers", lang)}</p>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={offersByStatus} dataKey="value" nameKey="name" outerRadius={80} label>
-                    {offersByStatus.map((_, i) => (
-                      <Cell key={i} fill={["#e8793a", "#f2a672", "#b8531f"][i % 3]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          {viewsData.length > 0 && (
-            <div className="h-64 mt-4">
-              <p className="text-sm font-medium mb-2">{t("views", lang) ?? "Vues par offre"}</p>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={viewsData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" fontSize={10} />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="vues" fill="hsl(20 60% 25%)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Chargement...</div>}>
+        <EmployerCharts appsByStatus={appsByStatus} offersByStatus={offersByStatus} viewsData={viewsData} />
+      </Suspense>
 
 
       <Card>
-        <CardHeader><CardTitle>{t("applications", lang) ?? "Candidatures reçues"}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("applications", lang) ?? "Candidatures reÃ§ues"}</CardTitle></CardHeader>
         <CardContent>
           {myApps.length === 0 ? (
             <p className="text-muted-foreground text-sm">{t("noResults", lang)}</p>
@@ -232,17 +188,17 @@ export default function EmployerHome() {
                     <div>
                       <div className="font-medium">{seeker?.name ?? t("unknownUser", lang)}</div>
                       <div className="text-xs text-muted-foreground">
-                        {offer?.title} · {a.status}
+                        {offer?.title} Â· {a.status}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "consultée")}>
-                        {t("markRead", lang) ?? "Consultée"}
+                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "consultÃ©e")}>
+                        {t("markRead", lang) ?? "ConsultÃ©e"}
                       </Button>
                       <Button size="sm" onClick={() => updateApplicationStatus(a.id, "retenue")}>
                         {t("approve", lang)}
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "refusée")}>
+                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "refusÃ©e")}>
                         {t("reject", lang)}
                       </Button>
                     </div>

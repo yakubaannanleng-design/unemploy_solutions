@@ -119,13 +119,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-1 focus:rounded">
+        {lang === "fr" ? "Aller au contenu principal" : "Skip to main content"}
+      </a>
       <Header
         currentUser={isAuthed ? currentUser : null}
         onLogout={logout}
         onSwitchUser={switchUser}
         demoUsers={DEMO_USERS}
       />
-      <main className="container py-6">
+      <main id="main-content" className="container py-6">
         <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Chargement…</div>}>
         <Routes>
           <Route path="/login" element={<AuthPage onLogin={login} />} />
