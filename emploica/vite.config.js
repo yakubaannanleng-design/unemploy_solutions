@@ -7,8 +7,14 @@ dns.setDefaultResultOrder("verbatim");
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: { "@": path.resolve(__dirname, "./src") },
+    dedupe: ["react", "react-dom"],
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
+  },
   server: { port: 3000, host: true, allowedHosts: true },
   preview: { port: 3000, host: true, allowedHosts: true },
-  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
   build: { chunkSizeWarningLimit: 5000 },
 });
