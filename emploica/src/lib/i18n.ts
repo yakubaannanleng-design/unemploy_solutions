@@ -100,6 +100,9 @@ const dict: Record<string, Record<Lang, string>> = {
   rating: { fr: "Évaluation", en: "Rating" },
   rateEmployer: { fr: "Évaluer l'employeur", en: "Rate the employer" },
   rateSaved: { fr: "Évaluation enregistrée", en: "Rating saved" },
+  settings: { fr: "Paramètres", en: "Settings" },
+  favorites: { fr: "Favoris", en: "Favorites" },
+  edit: { fr: "Modifier", en: "Edit" },
   darkMode: { fr: "Mode sombre", en: "Dark mode" },
   lightMode: { fr: "Mode clair", en: "Light mode" },
 };

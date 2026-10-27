@@ -1,9 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Separator } from "../ui/separator";
 import OfferCard from "../offers/OfferCard";
 import OfferDetailModal from "../offers/OfferDetailModal";
@@ -14,12 +16,15 @@ import type { Offer } from "../../types";
 
 export default function OffersView() {
   const { lang } = useLang();
-  const { state, patch, replace, currentUser } = useStore();
+  const { state, patch, replace, update, currentUser } = useStore();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [region, setRegion] = useState("");
   const [city, setCity] = useState("");
   const [quartier, setQuartier] = useState("");
+  const [contractFilter, setContractFilter] = useState("");
+  const [sortBy, setSortBy] = useState("date");
   const [selected, setSelected] = useState<Offer | null>(null);
   const [ratingOpen, setRatingOpen] = useState(false);
 
@@ -32,7 +37,13 @@ export default function OffersView() {
     .filter((o) => !categories.length || categories.includes(o.category))
     .filter((o) => !region || o.location.region === region)
     .filter((o) => !city || o.location.city === city)
-    .filter((o) => !quartier || o.location.quartier === quartier);
+    .filter((o) => !quartier || o.location.quartier === quartier)
+    .filter((o) => !contractFilter || o.contract === contractFilter)
+    .sort((a, b) => {
+      if (sortBy === "views") return b.views - a.views;
+      if (sortBy === "pay") return (b.pay || "").localeCompare(a.pay || "");
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   const apply = (offer: Offer) => {
     const exists = state.applications.some((a) => a.offerId === offer.id && a.seekerId === mine);
@@ -41,14 +52,14 @@ export default function OffersView() {
       id: "app-" + Math.random().toString(36).slice(2, 9),
       offerId: offer.id,
       seekerId: mine,
-      status: "envoyée",
+      status: "envoyÃ©e",
       createdAt: new Date().toISOString(),
     });
     patch("notifications", {
       id: "notif-" + Math.random().toString(36).slice(2, 9),
       userId: offer.employerId,
       type: "candidature",
-      body: `${currentUser.name} a candidaté à « ${offer.title} ».`,
+      body: `${currentUser.name} a candidatÃ© Ã  Â« ${offer.title} Â».`,
       createdAt: new Date().toISOString(),
       read: false,
     });
@@ -76,7 +87,7 @@ export default function OffersView() {
       type: "boost",
       amount: 500,
       operator: "Orange Money",
-      status: "réussi",
+      status: "rÃ©ussi",
       createdAt: new Date().toISOString(),
     });
   };
@@ -94,7 +105,29 @@ export default function OffersView() {
     } as any);
   };
 
+  const toggleFavorite = (id: string) => {
+    const next = state.favorites.includes(id)
+      ? state.favorites.filter((x) => x !== id)
+      : [...state.favorites, id];
+    update("favorites", next);
+  };
+
   const isEmployer = currentUser.role === "employeur";
+  const contactEmployer = (offer: Offer) => {
+    const otherId = offer.employerId;
+    let conv = state.conversations.find(
+      (c) => c.participants.includes(currentUser.id) && c.participants.includes(otherId)
+    );
+    if (!conv) {
+      conv = {
+        id: "conv-" + Math.random().toString(36).slice(2, 9),
+        participants: [currentUser.id, otherId],
+        messages: [],
+      };
+      patch("conversations", conv);
+    }
+    navigate("/messages", { state: { conversationId: conv.id } });
+  };
 
   return (
     <div className="space-y-4">
@@ -132,6 +165,30 @@ export default function OffersView() {
               else setQuartier(v);
             }}
           />
+          <Separator />
+          <div className="space-y-2">
+            <div className="text-sm font-medium">{t("contract", lang)}</div>
+            <Select value={contractFilter || "all"} onValueChange={(v) => setContractFilter(v === "all" ? "" : v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("all", lang) ?? "Tous"}</SelectItem>
+                {["permanent", "temporaire", "mission", "stage", "temps-partiel", "indépendant"].map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <div className="text-sm font-medium">{lang === "fr" ? "Tri" : "Sort"}</div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">{lang === "fr" ? "Plus récents" : "Newest"}</SelectItem>
+                <SelectItem value="views">{t("views", lang) ?? "Vues"}</SelectItem>
+                <SelectItem value="pay">{t("pay", lang)}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="lg:col-span-3">
@@ -154,6 +211,8 @@ export default function OffersView() {
                   onClick={() => { setSelected(o); }}
                   onApply={() => apply(o)}
                   alreadyApplied={state.applications.some((a) => a.offerId === o.id && a.seekerId === mine)}
+                  isFavorite={state.favorites.includes(o.id)}
+                  onToggleFavorite={() => toggleFavorite(o.id)}
                 />
               ))}
             </div>
@@ -167,7 +226,7 @@ export default function OffersView() {
         onOpenChange={(v) => !v && setSelected(null)}
         onApply={selected ? () => apply(selected) : undefined}
         onReport={selected ? () => report(selected) : undefined}
-        onContact={selected ? () => {} : undefined}
+        onContact={selected ? () => contactEmployer(selected) : undefined}
         onBoost={selected && isEmployer && selected.employerId === mine && !selected.boost ? () => boost(selected) : undefined}
         onRate={selected && !isEmployer ? () => setRatingOpen(true) : undefined}
         alreadyApplied={selected ? state.applications.some((a) => a.offerId === selected.id && a.seekerId === mine) : false}

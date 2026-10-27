@@ -8,10 +8,9 @@ import { useState } from "react";
 
 export default function FlashOffersView() {
   const { lang } = useLang();
-  const { state, patch } = useStore();
+  const { state, patch, currentUser } = useStore();
   const [applied, setApplied] = useState<Record<string, boolean>>({});
 
-  const mine = state.users[0].id;
   const active = state.flashOffers.filter((f) => new Date(f.endsAt) > new Date());
 
   const apply = (f: FlashOffer) => {

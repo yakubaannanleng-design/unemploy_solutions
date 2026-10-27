@@ -47,6 +47,7 @@ interface StoreState {
   flashOffers: FlashOffer[];
   ratings: Rating[];
   trainings: Training[];
+  favorites: string[];
 }
 
 type StoreApi = ReturnType<typeof useStoreValue>;
@@ -67,6 +68,7 @@ function defaultState(): StoreState {
     flashOffers: [],
     ratings: [],
     trainings: TRAININGS,
+    favorites: [],
   };
 }
 

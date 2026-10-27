@@ -1,14 +1,27 @@
-// Formulaire d'authentification animé de Workca.
-// Gère les modes "connexion" et "inscription" avec une transition en cascade entre les panneaux.
-import { useState, type CSSProperties, type FormEvent } from "react";
+﻿import { useState, type CSSProperties, type FormEvent } from "react";
 import { User, Mail, Lock } from "lucide-react";
 import "./auth-animated.css";
 
 type Mode = "login" | "register";
 
+export type LoginValues = { username: string; password: string };
+export type RegisterValues = { username: string; email: string; password: string };
+
+type AuthAnimatedProps = {
+  /** Appelée à l'envoi du formulaire de connexion */
+  onLogin?: (values: LoginValues) => void | Promise<void>;
+  /** Appelée à l'envoi du formulaire d'inscription */
+  onRegister?: (values: RegisterValues) => void | Promise<void>;
+  /** Message d'erreur affiché sous le formulaire visible */
+  error?: string;
+};
+
 // --li = délai d'entrée, --lo = délai de sortie (effet en cascade)
 const step = (i: number): CSSProperties =>
   ({ "--li": `${i * 0.1}s`, "--lo": `${i * 0.05}s` }) as CSSProperties;
+
+const readForm = (e: FormEvent<HTMLFormElement>) =>
+  Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
 
 type FieldProps = {
   label: string;
@@ -29,21 +42,24 @@ function Field({ label, type = "text", icon, index, name }: FieldProps) {
   );
 }
 
-interface AuthAnimatedProps {
-  onSubmit?: (e: FormEvent<HTMLFormElement>) => void;
-}
-
-export default function AuthAnimated({ onSubmit }: AuthAnimatedProps = {}) {
+export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimatedProps) {
   const [mode, setMode] = useState<Mode>("login");
   const isLogin = mode === "login";
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (onSubmit) {
-      onSubmit(e);
-      return;
-    }
-    // TODO : appeler ton API / Supabase / Firebase ici
+    const d = readForm(e);
+    await onLogin?.({ username: d.username ?? "", password: d.password ?? "" });
+  };
+
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const d = readForm(e);
+    await onRegister?.({
+      username: d.username ?? "",
+      email: d.email ?? "",
+      password: d.password ?? "",
+    });
   };
 
   return (
@@ -57,12 +73,13 @@ export default function AuthAnimated({ onSubmit }: AuthAnimatedProps = {}) {
           aria-hidden={!isLogin}
         >
           <h2 className="anim" style={step(0)}>Connexion</h2>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleLogin}>
             <Field name="username" label="Nom d'utilisateur" icon="user" index={1} />
             <Field name="password" label="Mot de passe" type="password" icon="lock" index={2} />
             <button className="btn anim" style={step(3)} type="submit" tabIndex={isLogin ? 0 : -1}>
               Se connecter
             </button>
+            {isLogin && error ? <p className="auth-error" role="alert">{error}</p> : null}
             <p className="switch anim" style={step(4)}>
               Pas encore de compte ?{" "}
               <button type="button" onClick={() => setMode("register")} tabIndex={isLogin ? 0 : -1}>
@@ -89,13 +106,14 @@ export default function AuthAnimated({ onSubmit }: AuthAnimatedProps = {}) {
           aria-hidden={isLogin}
         >
           <h2 className="anim" style={step(0)}>Inscription</h2>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleRegister}>
             <Field name="username" label="Nom d'utilisateur" icon="user" index={1} />
             <Field name="email" label="Email" type="email" icon="mail" index={2} />
             <Field name="password" label="Mot de passe" type="password" icon="lock" index={3} />
             <button className="btn anim" style={step(4)} type="submit" tabIndex={isLogin ? -1 : 0}>
               S'inscrire
             </button>
+            {!isLogin && error ? <p className="auth-error" role="alert">{error}</p> : null}
             <p className="switch anim" style={step(5)}>
               Déjà un compte ?{" "}
               <button type="button" onClick={() => setMode("login")} tabIndex={isLogin ? -1 : 0}>

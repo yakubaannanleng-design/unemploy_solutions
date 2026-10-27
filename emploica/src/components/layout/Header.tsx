@@ -1,7 +1,7 @@
 // En-tête de navigation de l'application Workca.
 // Contient le logo, le statut de connexion, les liens de navigation, le sélecteur de langue,
 // le menu utilisateur déroulant et le menu mobile.
-import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon } from "lucide-react";
+import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useLang, t } from "../../lib/i18n";
@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { useStore } from "../../lib/store";
 import type { User as UserType } from "../../types";
 
 interface HeaderProps {
@@ -25,10 +26,20 @@ interface HeaderProps {
   demoUsers: UserType[];
 }
 
-export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers }: HeaderProps) {
-  const { lang, setLang } = useLang();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+
+export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers }: HeaderProps) {
+  const { lang, setLang } = useLang();
+  const { state } = useStore();
+  const unread = currentUser
+    ? state.conversations.reduce(
+        (n, c) =>
+          n +
+          c.messages.filter((m) => m.receiverId === currentUser.id && m.status !== "lu").length,
+        0
+      )
+    : 0;
 
   const nav = (to: string, label: string) => (
     <Link
@@ -60,8 +71,10 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers 
         <nav className="hidden md:flex items-center gap-1">
           {currentUser && nav("/" + currentUser.role, t("home", lang))}
           {currentUser && nav("/offres", t("offers", lang))}
+          {currentUser && nav("/favoris", t("favorites", lang) ?? "Favoris")}
           {currentUser && nav("/boulots-eclair", t("flash", lang))}
           {currentUser && nav("/notifications", t("notifications", lang))}
+          {currentUser && nav("/parametres", t("settings", lang) ?? "Paramètres")}
           {currentUser && nav("/messages", t("messages", lang))}
           {currentUser?.role === "employeur" && nav("/offres/nouveau", t("createOffer", lang))}
           {currentUser?.role === "admin" && nav("/admin", t("admin", lang))}
@@ -81,7 +94,11 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers 
             <>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-brand-500" />
+                {unread > 0 && (
+                 <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                   {unread}
+                 </span>
+               )}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -94,7 +111,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers 
                     <div className="flex flex-col">
                       <span>{currentUser.name}</span>
                       <span className="text-xs text-muted-foreground capitalize">
-                        {t(currentUser.role === "chercheur" ? "jobSeeker" : "employer", lang)}
+                        {t(currentUser.role === "chercheur" ? "jobSeeker" : currentUser.role === "employeur" ? "employer" : "admin", lang)}
                       </span>
                     </div>
                   </DropdownMenuLabel>
@@ -135,6 +152,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers 
                 {currentUser && nav("/" + currentUser.role, t("home", lang))}
                 {currentUser && nav("/offres", t("offers", lang))}
                 {currentUser && nav("/messages", t("messages", lang))}
+                {currentUser && nav("/parametres", t("settings", lang) ?? "Paramètres")}
                 {currentUser?.role === "employeur" && nav("/offres/nouveau", t("createOffer", lang))}
                 {currentUser?.role === "admin" && nav("/admin", t("admin", lang))}
               </div>

@@ -14,6 +14,8 @@ import ProfileView from "./components/views/ProfileView";
 import OfferForm from "./components/offers/OfferForm";
 import NotificationsView from "./components/views/NotificationsView";
 import FlashOffersView from "./components/home/FlashOffersView";
+import SettingsView from "./components/views/SettingsView";
+import FavoritesView from "./components/views/FavoritesView";
 import type { User, Offer, Rating } from "./types";
 import { DEMO_USERS } from "./data/mockData";
 import AuthPage from "./pages/AuthPage";
@@ -29,15 +31,17 @@ const PROTECTED_ROUTES = [
   "/profil",
   "/notifications",
   "/boulots-eclair",
+  "/parametres",
+  "/favoris",
 ];
 
 // Wrapper qui protège une route : redirige vers /login si l'utilisateur n'est pas connecté.
 function RequireAuth({ children }: { children: JSX.Element }) {
-  const { currentUser } = useStore();
+  const isAuthed = window.localStorage.getItem("workca:me") !== null;
   const navigate = useNavigate();
   const location = useLocation();
 
-  if (!currentUser) {
+  if (!isAuthed) {
     navigate("/login", { state: { from: location }, replace: true });
     return null;
   }
@@ -50,22 +54,29 @@ export default function App() {
   const { state, patch, replace, setCurrentUser, currentUser } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isAuthed, setIsAuthed] = useState<boolean>(
+    () => window.localStorage.getItem("workca:me") !== null
+  );
 
   // Restaure l'utilisateur connecté depuis localStorage au chargement.
   useEffect(() => {
     const saved = window.localStorage.getItem("workca:me");
-    if (saved) setCurrentUser(saved);
+    if (saved) {
+      setCurrentUser(saved);
+      setIsAuthed(true);
+    }
   }, []);
 
   const login = (user: User) => {
     setCurrentUser(user.id);
     window.localStorage.setItem("workca:me", user.id);
+    setIsAuthed(true);
     navigate("/" + user.role);
   };
 
   const logout = () => {
-    setCurrentUser(DEMO_USERS[0].id);
     window.localStorage.removeItem("workca:me");
+    setIsAuthed(false);
     navigate("/login");
   };
 
@@ -99,14 +110,14 @@ export default function App() {
 
   // Si l'utilisateur est connecté et arrive sur la page d'accueil ou /login,
   // on le redirige vers son tableau de bord selon son rôle.
-  if (currentUser && (location.pathname === "/" || location.pathname === "/login")) {
+  if (isAuthed && currentUser && (location.pathname === "/" || location.pathname === "/login")) {
     return <Navigate to={"/" + currentUser.role} replace />;
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header
-        currentUser={currentUser}
+        currentUser={isAuthed ? currentUser : null}
         onLogout={logout}
         onSwitchUser={switchUser}
         demoUsers={DEMO_USERS}
@@ -186,11 +197,28 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/parametres"
+            element={
+              <RequireAuth>
+                <SettingsView />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/favoris"
+            element={
+              <RequireAuth>
+                <FavoritesView />
+              </RequireAuth>
+            }
+          />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="*" element={<AuthPage onLogin={login} />} />
         </Routes>
       </main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        <div className="container">{t("antiScam", lang)}</div>
+        <div className="container">{t("antiScam", lang)} · © {new Date().getFullYear()} MADI OUMAROU YAKUBA — Workca</div>
       </footer>
     </div>
   );

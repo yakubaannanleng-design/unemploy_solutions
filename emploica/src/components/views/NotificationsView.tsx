@@ -7,8 +7,8 @@ import { Separator } from "../ui/separator";
 
 export default function NotificationsView() {
   const { lang } = useLang();
-  const { state, update } = useStore();
-  const mine = state.users[0].id;
+  const { state, update, currentUser } = useStore();
+  const mine = currentUser.id;
   const notifs = state.notifications
     .filter((n) => n.userId === mine)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

@@ -17,6 +17,7 @@ export default function SeekerHome() {
 
   const recommended = state.offers
     .filter((o) => o.status === "publiée")
+    .filter((o) => !seeker || seeker.categories.length === 0 || seeker.categories.includes(o.category))
     .slice(0, 3);
 
   return (

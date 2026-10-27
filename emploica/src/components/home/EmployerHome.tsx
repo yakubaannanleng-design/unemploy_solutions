@@ -7,11 +7,11 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Separator } from "../ui/separator";
 import { Briefcase, Users, Eye, MessageSquare, Banknote, Zap, BookOpen, Star } from "lucide-react";
-import { categoryById } from "../../data/categories";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 export default function EmployerHome() {
   const { lang } = useLang();
-  const { state, replace } = useStore();
+  const { state, patch, replace, update, currentUser } = useStore();
   const myOffers = state.offers.filter((o) => o.employerId === currentUser.id);
   const myApps = state.applications.filter((a) =>
     myOffers.some((o) => o.id === a.offerId)
@@ -20,9 +20,20 @@ export default function EmployerHome() {
   const totalViews = myOffers.reduce((s, o) => s + o.views, 0);
   const totalBoosts = state.transactions.filter((t) => t.type === "boost" && t.userId === currentUser.id).length;
 
+  // Données pour les graphiques du tableau de bord.
+  const appsByStatus = ["envoyée", "consultée", "retenue", "refusée"].map((st) => ({
+    name: st,
+    value: myApps.filter((a) => a.status === st).length,
+  }));
+  const offersByStatus = ["publiée", "en-attente", "clôturée"].map((st) => ({
+    name: st,
+    value: myOffers.filter((o) => o.status === st).length,
+  }));
+  const viewsData = myOffers.map((o) => ({ name: o.title.slice(0, 12), vues: o.views }));
+
   const boost = (offer: any) => {
     replace("offers", { ...offer, boost: true, views: offer.views + 50 });
-    replace("transactions", {
+    patch("transactions", {
       id: "tx-" + Math.random().toString(36).slice(2, 9),
       userId: currentUser.id,
       type: "boost",
@@ -32,6 +43,27 @@ export default function EmployerHome() {
       createdAt: new Date().toISOString(),
     } as any);
   };
+  const updateApplicationStatus = (appId: string, status: "consultée" | "retenue" | "refusée") => {
+    update("applications", state.applications.map((a) => (a.id === appId ? { ...a, status } : a)));
+    const app = state.applications.find((a) => a.id === appId);
+    if (app) {
+      patch("notifications", {
+        id: "notif-" + Math.random().toString(36).slice(2, 9),
+        userId: app.seekerId,
+        type: "candidature",
+        body:
+          status === "retenue"
+            ? `Votre candidature a été retenue par ${currentUser.name}.`
+            : status === "refusée"
+            ? `Votre candidature a été refusée par ${currentUser.name}.`
+            : `Votre candidature a été consultée par ${currentUser.name}.`,
+        createdAt: new Date().toISOString(),
+        read: false,
+      });
+    }
+  };
+
+
 
   return (
     <div className="space-y-6">
@@ -99,6 +131,93 @@ export default function EmployerHome() {
           )}
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader><CardTitle>{t("stats", lang) ?? "Statistiques"}</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="h-64">
+              <p className="text-sm font-medium mb-2">{t("applications", lang)}</p>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={appsByStatus}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" fontSize={10} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="hsl(20 80% 48%)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="h-64">
+              <p className="text-sm font-medium mb-2">{t("offers", lang)}</p>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={offersByStatus} dataKey="value" nameKey="name" outerRadius={80} label>
+                    {offersByStatus.map((_, i) => (
+                      <Cell key={i} fill={["#e8793a", "#f2a672", "#b8531f"][i % 3]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          {viewsData.length > 0 && (
+            <div className="h-64 mt-4">
+              <p className="text-sm font-medium mb-2">{t("views", lang) ?? "Vues par offre"}</p>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={viewsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" fontSize={10} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="vues" fill="hsl(20 60% 25%)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
+      <Card>
+        <CardHeader><CardTitle>{t("applications", lang) ?? "Candidatures reçues"}</CardTitle></CardHeader>
+        <CardContent>
+          {myApps.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t("noResults", lang)}</p>
+          ) : (
+            <div className="space-y-2">
+              {myApps.map((a) => {
+                const seeker = state.users.find((u) => u.id === a.seekerId);
+                const offer = state.offers.find((o) => o.id === a.offerId);
+                return (
+                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <div className="font-medium">{seeker?.name ?? t("unknownUser", lang)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {offer?.title} · {a.status}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "consultée")}>
+                        {t("markRead", lang) ?? "Consultée"}
+                      </Button>
+                      <Button size="sm" onClick={() => updateApplicationStatus(a.id, "retenue")}>
+                        {t("approve", lang)}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "refusée")}>
+                        {t("reject", lang)}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
     </div>
   );
 }

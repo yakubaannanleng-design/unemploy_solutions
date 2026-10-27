@@ -12,6 +12,15 @@ import App from "./App.tsx";
 import { StoreProvider } from "./lib/store";
 import AppErrorBoundary from "./components/layout/AppErrorBoundary";
 
+// Applique le thème sauvegardé avant le rendu.
+try {
+  if (window.localStorage.getItem("workca:theme") === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+} catch {
+  /* ignore */
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AppErrorBoundary>

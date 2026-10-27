@@ -118,6 +118,7 @@ Pour maintenir ce projet, veuillez suivre les étapes suivantes :
 ## Licence
 
 Ce projet est sous licence MIT.
+\n## Auteur et droits de propriété\n\n© 2026 **MADI OUMAROU YAKUBA** — Workca. Tous droits réservés.\n\nDéveloppé et maintenu par MADI OUMAROU YAKUBA.\n
 
 ---
 

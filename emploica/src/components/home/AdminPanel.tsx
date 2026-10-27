@@ -24,6 +24,28 @@ export default function AdminPanel() {
     update("users", state.users.map((u) => (u.id === id ? { ...u, status: "suspendu" } : u)));
   const resolveReport = (id: string) =>
     update("signalements", state.signalements.map((s) => (s.id === id ? { ...s, status: "traité" } : s)));
+  const verifyEmployer = (userId: string) => {
+    update(
+      "employers",
+      state.employers.map((e) =>
+        e.userId === userId
+          ? { ...e, verification: "vérifié", verificationRequested: false, verifiedAt: new Date().toISOString() }
+          : e
+      )
+    );
+    const emp = state.employers.find((e) => e.userId === userId);
+    if (emp) {
+      patch("notifications", {
+        id: "notif-" + Math.random().toString(36).slice(2, 9),
+        userId,
+        type: "alerte",
+        body: `Votre entreprise « ${emp.orgName} » a été vérifiée par la plateforme.`,
+        createdAt: new Date().toISOString(),
+        read: false,
+      });
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -85,6 +107,36 @@ export default function AdminPanel() {
                   <Button size="sm" onClick={() => resolveReport(s.id)}>{t("review", lang)}</Button>
                 </div>
               ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>{lang === "fr" ? "Vérifications en attente" : "Pending verifications"}</CardTitle></CardHeader>
+        <CardContent>
+          {state.employers.filter((e) => e.verificationRequested && e.verification !== "vérifié").length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t("noResults", lang)}</p>
+          ) : (
+            <div className="space-y-2">
+              {state.employers
+                .filter((e) => e.verificationRequested && e.verification !== "vérifié")
+                .map((e) => {
+                  const u = state.users.find((x) => x.id === e.userId);
+                  return (
+                    <div key={e.userId} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div>
+                        <div className="font-medium">{e.orgName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {u?.name} · {e.orgType} · {e.verification}
+                        </div>
+                      </div>
+                      <Button size="sm" onClick={() => verifyEmployer(e.userId)}>
+                        <ShieldCheck className="h-3 w-3 mr-1" /> {t("verify", lang)}
+                      </Button>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </CardContent>

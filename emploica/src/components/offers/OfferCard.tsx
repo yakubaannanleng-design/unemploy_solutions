@@ -1,4 +1,4 @@
-import { MapPin, Clock, Banknote, Briefcase, Eye } from "lucide-react";
+import { MapPin, Clock, Banknote, Briefcase, Eye, Heart } from "lucide-react";
 import { useLang, t } from "../../lib/i18n";
 import { categoryById } from "../../data/categories";
 import { Badge } from "../ui/badge";
@@ -10,9 +10,11 @@ interface OfferCardProps {
   onClick: () => void;
   onApply?: () => void;
   alreadyApplied?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
-export default function OfferCard({ offer, onClick, onApply, alreadyApplied }: OfferCardProps) {
+export default function OfferCard({ offer, onClick, onApply, alreadyApplied, isFavorite, onToggleFavorite }: OfferCardProps) {
   const { lang } = useLang();
   const cat = categoryById(offer.category);
   const payLabel = offer.payMode === "négocier" ? t("contact", lang) : offer.pay;
@@ -31,6 +33,16 @@ export default function OfferCard({ offer, onClick, onApply, alreadyApplied }: O
             </span>
           </div>
         </div>
+        {onToggleFavorite && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+            className="p-1 rounded-full hover:bg-accent"
+            aria-label="favorite"
+          >
+            <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+          </button>
+        )}
         {offer.verification && offer.verification === "vérifié" && (
           <Badge variant="secondary" className="text-xs">{t("verifiedEmployer", lang)}</Badge>
         )}

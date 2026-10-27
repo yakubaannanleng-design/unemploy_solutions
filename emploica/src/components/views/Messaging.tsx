@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Input } from "../ui/input";
@@ -15,9 +15,23 @@ interface MessagingProps {
 
 export default function Messaging({ conversationId, otherId }: MessagingProps) {
   const { lang } = useLang();
-  const { state, replace, currentUser } = useStore();
+  const { state, replace, update, currentUser } = useStore();
   const [text, setText] = useState("");
   const conv = state.conversations.find((c) => c.id === conversationId);
+  useEffect(() => {
+    if (!conv) return;
+    const hasUnread = conv.messages.some((m) => m.receiverId === currentUser.id && m.status !== "lu");
+    if (!hasUnread) return;
+    update(
+      "conversations",
+      state.conversations.map((c) =>
+        c.id === conv!.id
+          ? { ...c, messages: c.messages.map((m) => (m.receiverId === currentUser.id ? { ...m, status: "lu" } : m)) }
+          : c
+      )
+    );
+  }, [conversationId]);
+
   const other = otherId ? state.users.find((u) => u.id === otherId) : null;
 
   const send = () => {

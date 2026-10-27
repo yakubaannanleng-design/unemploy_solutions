@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Link } from "react-router-dom";
@@ -7,19 +8,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Separator } from "../ui/separator";
 import { User, Building2, ShieldCheck, MapPin, Briefcase, Star, BookOpen } from "lucide-react";
 import { categoryById } from "../../data/categories";
+import ProfileEditor from "./ProfileEditor";
 import { TRAININGS } from "../../data/trainings";
 
 export default function ProfileView() {
   const { lang } = useLang();
-  const { state, patch, currentUser } = useStore();
+  const { state, patch, update, currentUser } = useStore();
   const mine = currentUser.id;
   const seeker = state.seekers.find((s) => s.userId === mine);
   const emp = state.employers.find((e) => e.userId === mine);
   const isEmployer = currentUser.role === "employeur";
+  const [editing, setEditing] = useState(false);
+
 
   const verify = () => {
     if (emp) {
-      patch("employers", { ...emp, verification: "vérifié", verifiedAt: new Date().toISOString() });
+      patch("employers", {
+        ...emp,
+        verificationRequested: true,
+        verificationRequestedAt: new Date().toISOString(),
+      });
+      // Notifie les administrateurs
+      state.users
+        .filter((u) => u.role === "admin")
+        .forEach((admin) =>
+          patch("notifications", {
+            id: "notif-" + Math.random().toString(36).slice(2, 9),
+            userId: admin.id,
+            type: "alerte",
+            body: `${currentUser.name} demande la vérification de son entreprise « ${emp.orgName} ».`,
+            createdAt: new Date().toISOString(),
+            read: false,
+          })
+        );
     }
   };
 
@@ -39,6 +60,8 @@ export default function ProfileView() {
                 <div className="text-sm text-muted-foreground">{emp?.orgType}</div>
                 {emp?.verification === "vérifié" ? (
                   <Badge variant="secondary" className="mt-1">{t("verified", lang)}</Badge>
+                ) : emp?.verificationRequested ? (
+                  <Badge variant="outline" className="mt-1">{lang === "fr" ? "Demande envoyée" : "Request sent"}</Badge>
                 ) : (
                   <Button size="sm" variant="outline" className="mt-1" onClick={verify}>
                     <ShieldCheck className="h-3 w-3 mr-1" /> {t("verify", lang)}
@@ -57,6 +80,19 @@ export default function ProfileView() {
     );
   }
 
+  if (editing && seeker) {
+    return (
+      <ProfileEditor
+        userId={mine}
+        initial={seeker}
+        onSave={(p) => {
+          update("seekers", state.seekers.map((s) => (s.userId === mine ? p : s)));
+          setEditing(false);
+        }}
+      />
+    );
+  }
+
   if (!seeker) return <p className="text-muted-foreground">{t("noResults", lang)}</p>;
   const cat = categoryById(seeker.categories[0]);
   const recommended = TRAININGS.filter((tr) => seeker.categories.includes(tr.category)).slice(0, 3);
@@ -64,7 +100,10 @@ export default function ProfileView() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">{t("profile", lang)}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">{t("profile", lang)}</h2>
+        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{t("edit", lang) ?? "Modifier"}</Button>
+      </div>
 
       <Card>
         <CardHeader><CardTitle>{t("jobSeeker", lang)}</CardTitle></CardHeader>

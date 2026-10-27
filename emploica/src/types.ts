@@ -71,6 +71,8 @@ export interface EmployerProfile {
   orgType: "entreprise" | "particulier" | "association";
   verification: VerificationLevel;
   verifiedAt?: string;
+  verificationRequested?: boolean;
+  verificationRequestedAt?: string;
 }
 
 export interface Offer {

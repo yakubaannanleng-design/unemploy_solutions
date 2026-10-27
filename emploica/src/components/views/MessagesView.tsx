@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Badge } from "../ui/badge";
@@ -11,8 +12,10 @@ import { MessageSquare } from "lucide-react";
 export default function MessagesView() {
   const { lang } = useLang();
   const { state, currentUser } = useStore();
+  const location = useLocation();
+  const initialConv = (location.state as any)?.conversationId ?? null;
   const mine = currentUser.id;
-  const [active, setActive] = useState<string | null>(null);
+  const [active, setActive] = useState<string | null>(initialConv);
 
   const convs = state.conversations.filter((c) => c.participants.includes(mine));
 
