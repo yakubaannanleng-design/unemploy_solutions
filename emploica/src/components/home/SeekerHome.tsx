@@ -117,12 +117,12 @@ export default function SeekerHome() {
               <OfferPreview key={o.id} offer={o} />
             ))}
           </div>
-          <div className="pt-2">
-            <Link to="/offres">
-              <Button variant="outline" size="sm">{lang === "fr" ? "Voir toutes les offres" : "View all offers"}</Button>
-            </Link>
-          </div>
         )}
+      </div>
+      <div className="pt-2">
+        <Link to="/offres">
+          <Button variant="outline" size="sm">{lang === "fr" ? "Voir toutes les offres" : "View all offers"}</Button>
+        </Link>
       </div>
     </div>
   );
