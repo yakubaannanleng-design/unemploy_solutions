@@ -10,7 +10,6 @@ import { User, Building2, ShieldCheck, MapPin, Briefcase, Star, BookOpen } from 
 import { categoryById } from "../../data/categories";
 import ProfileEditor from "./ProfileEditor";
 import { toast } from "sonner";
-import { Spinner } from "../ui/spinner";
 import { Progress } from "../ui/progress";
 import { supabase } from "../../lib/supabase";
 import { TRAININGS } from "../../data/trainings";
@@ -22,8 +21,7 @@ export default function ProfileView() {
   const seeker = state.seekers.find((s) => s.userId === mine);
   const emp = state.employers.find((e) => e.userId === mine);
   const isEmployer = currentUser.role === "employeur";
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingCv, setUploadingCv] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const compressImage = (file: File, maxSize = 1024): Promise<File> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -54,7 +52,7 @@ export default function ProfileView() {
   const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !seeker || !supabase) return;
-    setUploadingPhoto(true);
+    setUploading(true);
     try {
       const compressed = await compressImage(file);
       const ext = "jpg";
@@ -65,22 +63,17 @@ export default function ProfileView() {
       const url = data.publicUrl;
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
       toast.success(lang === "fr" ? "Photo mise à jour." : "Photo updated.");
-      if (supabase) {
-        supabase.from("seeker_profiles").update({ photo: url }).eq("user_id", currentUser.id).then(({ error }) => {
-          if (error) console.error("Supabase update photo error:", error);
-        });
-      }
-    } catch {
-      toast.error(lang === "fr" ? "Impossible d'envoyer la photo, réessaie." : "Could not upload photo, try again.");
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer la photo, réessaie." : "Could not upload photo, try again."));
     } finally {
-      setUploadingPhoto(false);
+      setUploading(false);
     }
   };
   
   const uploadCv = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !seeker || !supabase) return;
-    setUploadingCv(true);
+    setUploading(true);
     try {
       const ext = file.name.split(".").pop();
       const path = `${currentUser.id}/cv.${ext}`;
@@ -89,15 +82,10 @@ export default function ProfileView() {
       const { data } = supabase.storage.from("cvs").getPublicUrl(path);
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, cvUrl: data.publicUrl } : s)));
       toast.success(lang === "fr" ? "CV téléversé." : "CV uploaded.");
-      if (supabase) {
-        supabase.from("seeker_profiles").update({ cv_url: data.publicUrl }).eq("user_id", currentUser.id).then(({ error }) => {
-          if (error) console.error("Supabase update cv error:", error);
-        });
-      }
-    } catch {
-      toast.error(lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again.");
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again."));
     } finally {
-      setUploadingCv(false);
+      setUploading(false);
     }
   };
 
@@ -134,7 +122,6 @@ export default function ProfileView() {
         <Card>
           <CardHeader><CardTitle>{t("employer", lang)}</CardTitle></CardHeader>
           <CardContent>
-      <div className="h-20 -mx-6 -mt-6 mb-4 bg-gradient-to-r from-brand-500 to-brand-700 rounded-t-lg" />
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <Building2 className="h-6 w-6" />
@@ -232,39 +219,40 @@ export default function ProfileView() {
       <Card>
         <CardHeader><CardTitle>{t("jobSeeker", lang)}</CardTitle></CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold overflow-hidden" style={{ backgroundColor: `hsl(${(currentUser.name.charCodeAt(0) * 37) % 360}, 60%, 45%)` }}>
-                {seeker.photo ? (
-                  <img src={seeker.photo} alt={currentUser.name} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-white">{currentUser.name.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
-              <div>
-                <div className="font-medium flex items-center gap-2">
-                  {currentUser.name}
-                  {seeker.rating && <Star className="h-4 w-4 text-brand-500" fill="currentColor" />}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {cat ? `${lang === "fr" ? cat.name : cat.nameEn} · ` : ""}{seeker.zone.city}
-                </div>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold overflow-hidden" style={{ backgroundColor: `hsl(${(currentUser.name.charCodeAt(0) * 37) % 360}, 60%, 45%)` }}>
+              {seeker.photo ? (
+                <img src={seeker.photo} alt={currentUser.name} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-white">{currentUser.name.charAt(0).toUpperCase()}</span>
+              )}
             </div>
-            <div className="flex flex-row gap-2">
-              <label className="cursor-pointer">
-                <input type="file" accept="image/*" onChange={uploadPhoto} disabled={uploadingPhoto} className="hidden" />
-                <span className="inline-flex items-center justify-center min-h-[44px] px-3 py-1 rounded-md border border-input text-sm hover:bg-accent cursor-pointer">
-                  {uploadingPhoto ? <Spinner /> : (lang === "fr" ? "Changer la photo" : "Change photo")}
-                </span>
-              </label>
-              <label className="cursor-pointer">
-                <input type="file" accept=".pdf,.doc,.docx" onChange={uploadCv} disabled={uploadingCv} className="hidden" />
-                <span className="inline-flex items-center justify-center min-h-[44px] px-3 py-1 rounded-md border border-input text-sm hover:bg-accent cursor-pointer">
-                  {uploadingCv ? <Spinner /> : (lang === "fr" ? "Télécharger un CV" : "Upload CV")}
+            <div className="mt-3">
+              <label className="text-xs text-muted-foreground cursor-pointer">
+                <input type="file" accept="image/*" onChange={uploadPhoto} disabled={uploading} className="hidden" />
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-input text-sm hover:bg-accent cursor-pointer">
+                  {uploading ? (lang === "fr" ? "Téléchargement..." : "Uploading...") : (lang === "fr" ? "Changer la photo" : "Change photo")}
                 </span>
               </label>
             </div>
+            <div className="mt-2">
+              <label className="text-xs text-muted-foreground cursor-pointer">
+                <input type="file" accept=".pdf,.doc,.docx" onChange={uploadCv} disabled={uploading} className="hidden" />
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-input text-sm hover:bg-accent cursor-pointer">
+                  {uploading ? (lang === "fr" ? "Téléchargement..." : "Uploading...") : (lang === "fr" ? "Télécharger un CV" : "Upload CV")}
+                </span>
+              </label>
+            </div>
+
+            <div>
+              <div className="font-medium flex items-center gap-2">
+                {currentUser.name}
+                {seeker.rating && <Star className="h-4 w-4 text-brand-500" fill="currentColor" />}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {cat ? (lang === "fr" ? cat.name : cat.nameEn) : "—"} · {seeker.zone.city}
+              </div>
+cd            </div>
           </div>
           <Separator className="my-3" />
            <div className="space-y-2 text-sm">

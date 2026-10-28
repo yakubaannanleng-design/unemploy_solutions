@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+﻿import { useState, type CSSProperties, type FormEvent } from "react";
 import { User, Mail, Lock, Eye, EyeOff, Globe } from "lucide-react";
 import { useLang } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
@@ -35,25 +35,12 @@ type FieldProps = {
 };
 
 function Field({ label, type = "text", icon, index, name }: FieldProps) {
-  const [show, setShow] = useState(false);
-  const inputType = type === "password" ? (show ? "text" : "password") : type;
   const Icon = { user: User, mail: Mail, lock: Lock }[icon];
   return (
     <div className="field anim" style={step(index)}>
-      <input name={name} type={inputType} placeholder=" " required />
+      <input name={name} type={type} placeholder=" " required />
       <label>{label}</label>
       <Icon aria-hidden="true" />
-      {type === "password" && (
-        <button
-          type="button"
-          onClick={() => setShow((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-          tabIndex={-1}
-        >
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      )}
     </div>
   );
 }
@@ -61,23 +48,6 @@ function Field({ label, type = "text", icon, index, name }: FieldProps) {
 export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimatedProps) {
   const [mode, setMode] = useState<Mode>("login");
   const isLogin = mode === "login";
-  const { lang, setLang } = useLang();
-  const [rememberMe, setRememberMe] = useState(false);
-
-  const handleSocial = async (provider: "google" | "apple") => {
-    if (!supabase) { toast.error("Service d'authentification indisponible."); return; }
-    const { error: authError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/" } });
-    if (authError) toast.error(authError.message);
-  };
-
-  const handleForgotPassword = async () => {
-    const email = window.prompt("Entre ton email pour réinitialiser le mot de passe :");
-    if (!email) return;
-    if (!supabase) { toast.error("Service indisponible."); return; }
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/login" });
-    if (resetError) toast.error(resetError.message);
-    else toast.success("Email de réinitialisation envoyé.");
-  };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -88,11 +58,10 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const d = readForm(e);
-await onRegister?.({
+    await onRegister?.({
       username: d.username ?? "",
       email: d.email ?? "",
       password: d.password ?? "",
-      role: (d.role as "chercheur" | "employeur") ?? "chercheur",
     });
   };
 
@@ -109,19 +78,15 @@ await onRegister?.({
           <h2 className="anim" style={step(0)}>Connexion</h2>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-2 mb-3">
-              <button type="button" className="btn anim" style={step(1)} onClick={() => handleSocial("google")}>
-                Continuer avec Google
-              </button>
-              <button type="button" className="btn anim" style={step(2)} onClick={() => handleSocial("apple")}>
-                Continuer avec Apple
-              </button>
+              <button type="button" className="btn anim" onClick={() => handleSocial("google")}>Continuer avec Google</button>
+              <button type="button" className="btn anim" onClick={() => handleSocial("apple")}>Continuer avec Apple</button>
             </div>
             <p className="text-xs text-muted-foreground text-center mb-3">
               En cliquant sur Continuer, vous acceptez les Conditions d’utilisation, la Politique de confidentialité et la Politique relative aux cookies de Workca.
             </p>
             <p className="text-center text-sm mb-2">ou</p>
-            <Field name="username" label="E-mail ou téléphone" icon="user" index={3} />
-            <Field name="password" label="Mot de passe" type="password" icon="lock" index={4} />
+            <Field name="username" label="Nom d'utilisateur" icon="user" index={1} />
+            <Field name="password" label="Mot de passe" type="password" icon="lock" index={2} />
             <div className="flex items-center justify-between text-sm mb-2">
               <button type="button" className="text-primary hover:underline" onClick={handleForgotPassword}>
                 Mot de passe oublié ?
@@ -131,11 +96,11 @@ await onRegister?.({
               <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
               Rester connecté(e)
             </label>
-            <button className="btn anim" style={step(5)} type="submit" tabIndex={isLogin ? 0 : -1}>
-              S’identifier
+            <button className="btn anim" style={step(3)} type="submit" tabIndex={isLogin ? 0 : -1}>
+              Se connecter
             </button>
             {isLogin && error ? <p className="auth-error" role="alert">{error}</p> : null}
-            <p className="switch anim" style={step(6)}>
+            <p className="switch anim" style={step(4)}>
               Pas encore de compte ?{" "}
               <button type="button" onClick={() => setMode("register")} tabIndex={isLogin ? 0 : -1}>
                 Créer un compte
@@ -165,13 +130,13 @@ await onRegister?.({
             <Field name="username" label="Nom d'utilisateur" icon="user" index={1} />
             <Field name="email" label="Email" type="email" icon="mail" index={2} />
             <Field name="password" label="Mot de passe" type="password" icon="lock" index={3} />
-            <div className="field anim" style={step(4)}>
+            <div className="field anim">
               <select name="role" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" defaultValue="chercheur">
                 <option value="chercheur">Je cherche un emploi</option>
                 <option value="employeur">Je propose un emploi</option>
               </select>
             </div>
-            <button className="btn anim" style={step(5)} type="submit" tabIndex={isLogin ? -1 : 0}>
+            <button className="btn anim" style={step(4)} type="submit" tabIndex={isLogin ? -1 : 0}>
               S'inscrire
             </button>
             {!isLogin && error ? <p className="auth-error" role="alert">{error}</p> : null}
@@ -206,11 +171,7 @@ await onRegister?.({
       </div>
       <div className="flex justify-center items-center gap-2">
         <Globe className="h-3 w-3" />
-        <select
-          value={lang}
-          onChange={(e) => setLang(e.target.value as "fr" | "en")}
-          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-        >
+        <select value={lang} onChange={(e) => setLang(e.target.value as "fr" | "en")} className="rounded-md border border-input bg-background px-2 py-1 text-xs">
           <option value="fr">Français</option>
           <option value="en">English</option>
         </select>
