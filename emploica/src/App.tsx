@@ -88,13 +88,16 @@ export default function App() {
       // 2) Chargement des donnees depuis Supabase
        (async () => {
          try {
-           const [{ data: offers }, { data: applications }, { data: conversations }, { data: messages }, { data: notifications }] = await Promise.all([
-             supabase.from("offers").select("*"),
-             supabase.from("applications").select("*"),
-             supabase.from("conversations").select("*"),
-             supabase.from("messages").select("*"),
-             supabase.from("notifications").select("*"),
-           ]);
+            const [{ data: offers }, { data: applications }, { data: conversations }, { data: messages }, { data: notifications }, { data: users }, { data: seekerProfiles }, { data: employerProfiles }] = await Promise.all([
+              supabase.from("offers").select("*"),
+              supabase.from("applications").select("*"),
+              supabase.from("conversations").select("*"),
+              supabase.from("messages").select("*"),
+              supabase.from("notifications").select("*"),
+              supabase.from("users").select("*"),
+              supabase.from("seeker_profiles").select("*"),
+              supabase.from("employer_profiles").select("*"),
+            ]);
            if (offers && offers.length > 0) {
              const mapped = offers.map((o: any) => ({
                id: o.id,
@@ -159,6 +162,55 @@ export default function App() {
              }));
              update("notifications", mapped);
            }
+            if (users && users.length > 0) {
+              const mapped = users.map((u: any) => ({
+                id: u.id,
+                role: u.role,
+                name: u.name,
+                phone: u.phone,
+                email: u.email,
+                passwordHash: u.password_hash ?? "",
+                status: u.status,
+                verification: u.verification === "verifie" ? "vérifié" : "déclaré",
+                createdAt: u.created_at,
+              }));
+              update("users", mapped);
+            }
+            if (seekerProfiles && seekerProfiles.length > 0) {
+              const mapped = seekerProfiles.map((s: any) => ({
+                userId: s.user_id,
+                bio: s.bio ?? "",
+                skills: s.skills ?? [],
+                categories: s.categories ?? [],
+                contractWanted: s.contract_wanted ?? [],
+                availability: s.availability ?? "immédiatement",
+                zone: { region: s.zone_region, city: s.zone_city, quartier: s.zone_quartier, lat: s.lat, lng: s.lng },
+                radiusKm: s.radius_km ?? 10,
+                experience: s.experience ?? "",
+
+                education: s.education,
+                cvUrl: s.cv_url,
+                languages: s.languages ?? [],
+                photo: s.photo,
+                missionsDone: s.missions_done ?? 0,
+                rating: s.rating,
+              }));
+              update("seekers", mapped);
+            }
+            if (employerProfiles && employerProfiles.length > 0) {
+              const mapped = employerProfiles.map((e: any) => ({
+                userId: e.user_id,
+                orgName: e.org_name,
+                description: e.description ?? "",
+                orgType: e.org_type,
+                verification: e.verification === "verifie" ? "vérifié" : "déclaré",
+                verifiedAt: e.verified_at,
+                verificationRequested: e.verification_requested,
+                verificationRequestedAt: e.verification_requested_at,
+              }));
+              update("employers", mapped);
+            }
+
          } catch (e) {
            console.error("Supabase load error:", e);
          }

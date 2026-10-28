@@ -63,6 +63,11 @@ export default function ProfileView() {
       const url = data.publicUrl;
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
       toast.success(lang === "fr" ? "Photo mise à jour." : "Photo updated.");
+      if (supabase) {
+        supabase.from("seeker_profiles").update({ photo: url }).eq("user_id", currentUser.id).then(({ error }) => {
+          if (error) console.error("Supabase update photo error:", error);
+        });
+      }
     } catch (err: any) {
       toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer la photo, réessaie." : "Could not upload photo, try again."));
     } finally {
@@ -82,6 +87,11 @@ export default function ProfileView() {
       const { data } = supabase.storage.from("cvs").getPublicUrl(path);
       update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, cvUrl: data.publicUrl } : s)));
       toast.success(lang === "fr" ? "CV téléversé." : "CV uploaded.");
+      if (supabase) {
+        supabase.from("seeker_profiles").update({ cv_url: data.publicUrl }).eq("user_id", currentUser.id).then(({ error }) => {
+          if (error) console.error("Supabase update cv error:", error);
+        });
+      }
     } catch (err: any) {
       toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again."));
     } finally {
