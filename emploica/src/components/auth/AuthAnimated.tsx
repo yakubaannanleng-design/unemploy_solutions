@@ -1,5 +1,8 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, Globe } from "lucide-react";
+import { useLang } from "../../lib/i18n";
+import { supabase } from "../../lib/supabase";
+import { toast } from "sonner";
 import "./auth-animated.css";
 
 type Mode = "login" | "register";
@@ -88,13 +91,34 @@ await onRegister?.({
         >
           <h2 className="anim" style={step(0)}>Connexion</h2>
           <form onSubmit={handleLogin}>
-            <Field name="username" label="Nom d'utilisateur" icon="user" index={1} />
-            <Field name="password" label="Mot de passe" type="password" icon="lock" index={2} />
-            <button className="btn anim" style={step(3)} type="submit" tabIndex={isLogin ? 0 : -1}>
-              Se connecter
+            <div className="flex flex-col gap-2 mb-3">
+              <button type="button" className="btn anim" style={step(1)} onClick={() => handleSocial("google")}>
+                Continuer avec Google
+              </button>
+              <button type="button" className="btn anim" style={step(2)} onClick={() => handleSocial("apple")}>
+                Continuer avec Apple
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mb-3">
+              En cliquant sur Continuer, vous acceptez les Conditions d’utilisation, la Politique de confidentialité et la Politique relative aux cookies de Workca.
+            </p>
+            <p className="text-center text-sm mb-2">ou</p>
+            <Field name="username" label="E-mail ou téléphone" icon="user" index={3} />
+            <Field name="password" label="Mot de passe" type="password" icon="lock" index={4} />
+            <div className="flex items-center justify-between text-sm mb-2">
+              <button type="button" className="text-primary hover:underline" onClick={handleForgotPassword}>
+                Mot de passe oublié ?
+              </button>
+            </div>
+            <label className="flex items-center gap-2 text-sm mb-3">
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+              Rester connecté(e)
+            </label>
+            <button className="btn anim" style={step(5)} type="submit" tabIndex={isLogin ? 0 : -1}>
+              S’identifier
             </button>
             {isLogin && error ? <p className="auth-error" role="alert">{error}</p> : null}
-            <p className="switch anim" style={step(4)}>
+            <p className="switch anim" style={step(6)}>
               Pas encore de compte ?{" "}
               <button type="button" onClick={() => setMode("register")} tabIndex={isLogin ? 0 : -1}>
                 Créer un compte
@@ -154,6 +178,27 @@ await onRegister?.({
           </p>
         </section>
       </div>
+    <div className="mt-6 text-center text-xs text-muted-foreground space-y-2">
+      <div className="flex flex-wrap justify-center gap-3">
+        <a href="/conditions" className="hover:underline">Conditions d’utilisation</a>
+        <a href="/confidentialite" className="hover:underline">Politique de confidentialité</a>
+        <a href="/confidentialite" className="hover:underline">Politique relative aux cookies</a>
+        <a href="/conditions" className="hover:underline">Directives de la communauté</a>
+        <a href="/conditions" className="hover:underline">Politique de copyright</a>
+        <a href="mailto:yakubaannanleng@gmail.com?subject=Feedback Workca" className="hover:underline">Envoyer un feedback</a>
+      </div>
+      <div className="flex justify-center items-center gap-2">
+        <Globe className="h-3 w-3" />
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value as "fr" | "en")}
+          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+        >
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
     </div>
   );
 }
