@@ -41,7 +41,7 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
           if (!u) {
             u = {
               id: data.user.id,
-              role: "chercheur",
+              role: values.role ?? "chercheur",
               name: data.user.user_metadata?.name ?? emailToTry.split("@")[0],
               phone: data.user.user_metadata?.phone ?? "",
               email: emailToTry,
@@ -87,7 +87,7 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
     setError(lang === "fr" ? msg : "Incorrect email or password. Try again, or create an account.");
   };
 
-  const handleRegister = async (values: { username: string; email: string; password: string }) => {
+  const handleRegister = async (values: { username: string; email: string; password: string; role?: "chercheur" | "employeur" }) => {
     const username = values.username.trim();
     const password = values.password;
     if (!username || !password) {
@@ -106,7 +106,7 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
       if (!authError && data.user) {
         const newUser: User = {
           id: data.user.id,
-          role: "chercheur",
+          role: values.role ?? "chercheur",
           name: username,
           phone: username.startsWith("+") ? username : "+237 " + username,
           email,
@@ -142,7 +142,7 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
     // 2) Fallback local
     const newUser: User = {
       id: "u-" + Math.random().toString(36).slice(2, 9),
-      role: "chercheur",
+      role: values.role ?? "chercheur",
       name: username,
       phone: username.startsWith("+") ? username : "+237 " + username,
       email: values.email || undefined,
@@ -152,19 +152,30 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
       createdAt: new Date().toISOString(),
     };
     patch("users", newUser);
-    patch("seekers", {
-      userId: newUser.id,
-      bio: "",
-      skills: [],
-      categories: [],
-      contractWanted: [],
-      availability: "immédiatement",
-      zone: { region: "Centre", city: "Yaoundé", quartier: "" },
-      radiusKm: 10,
-      experience: "",
-      languages: ["français"],
-      missionsDone: 0,
-    } as any);
+    if ((values.role ?? "chercheur") === "employeur") {
+      patch("employers", {
+        userId: newUser.id,
+        orgName: username,
+        description: "",
+        orgType: "entreprise",
+        verification: "déclaré",
+        verificationRequested: false,
+      } as any);
+    } else {
+      patch("seekers", {
+        userId: newUser.id,
+        bio: "",
+        skills: [],
+        categories: [],
+        contractWanted: [],
+        availability: "immédiatement",
+        zone: { region: "Centre", city: "Yaoundé", quartier: "" },
+        radiusKm: 10,
+        experience: "",
+        languages: ["français"],
+        missionsDone: 0,
+      } as any);
+    }
     setError("");
     onLogin?.(newUser);
   };

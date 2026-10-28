@@ -107,6 +107,15 @@ export default function EmployerHome() {
   if (editingOffer) {
     return (
       <div className="space-y-4">
+      <div className="rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 p-6 text-white shadow-lg flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-bold mb-1">{lang === "fr" ? "Publiez une offre" : "Post a job"}</h3>
+          <p className="text-sm opacity-90">{lang === "fr" ? "Trouvez le bon candidat près de chez vous." : "Find the right candidate near you."}</p>
+        </div>
+        <Link to="/offres/nouveau">
+          <Button variant="secondary">{lang === "fr" ? "Publier" : "Post"}</Button>
+        </Link>
+      </div>
         <h2 className="text-xl font-semibold">{lang === "fr" ? "Modifier l'offre" : "Edit offer"}</h2>
         <OfferForm
           initial={editingOffer}

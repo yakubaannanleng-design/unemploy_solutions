@@ -5,7 +5,7 @@ import "./auth-animated.css";
 type Mode = "login" | "register";
 
 export type LoginValues = { username: string; password: string };
-export type RegisterValues = { username: string; email: string; password: string };
+export type RegisterValues = { username: string; email: string; password: string; role?: "chercheur" | "employeur" };
 
 type AuthAnimatedProps = {
   /** Appelée à l'envoi du formulaire de connexion */
@@ -68,10 +68,11 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const d = readForm(e);
-    await onRegister?.({
+await onRegister?.({
       username: d.username ?? "",
       email: d.email ?? "",
       password: d.password ?? "",
+      role: (d.role as "chercheur" | "employeur") ?? "chercheur",
     });
   };
 
@@ -123,7 +124,13 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
             <Field name="username" label="Nom d'utilisateur" icon="user" index={1} />
             <Field name="email" label="Email" type="email" icon="mail" index={2} />
             <Field name="password" label="Mot de passe" type="password" icon="lock" index={3} />
-            <button className="btn anim" style={step(4)} type="submit" tabIndex={isLogin ? -1 : 0}>
+            <div className="field anim" style={step(4)}>
+              <select name="role" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" defaultValue="chercheur">
+                <option value="chercheur">Je cherche un emploi</option>
+                <option value="employeur">Je propose un emploi</option>
+              </select>
+            </div>
+            <button className="btn anim" style={step(5)} type="submit" tabIndex={isLogin ? -1 : 0}>
               S'inscrire
             </button>
             {!isLogin && error ? <p className="auth-error" role="alert">{error}</p> : null}
