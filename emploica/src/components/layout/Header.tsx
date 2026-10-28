@@ -179,6 +179,26 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
             </SheetTrigger>
             <SheetContent>
               <div className="flex flex-col gap-2 mt-4">
+              {currentUser && currentUser.role !== "admin" && (
+                <div className="flex gap-2 mb-2">
+                  <Button
+                    variant={currentUser.role === "chercheur" ? "default" : "outline"}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => switchMode("chercheur")}
+                  >
+                    {lang === "fr" ? "Chercheur" : "Seeker"}
+                  </Button>
+                  <Button
+                    variant={currentUser.role === "employeur" ? "default" : "outline"}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => switchMode("employeur")}
+                  >
+                    {lang === "fr" ? "Employeur" : "Employer"}
+                  </Button>
+                </div>
+              )}
                 {currentUser && nav("/" + currentUser.role, t("home", lang))}
                 {currentUser && nav("/offres", t("offers", lang))}
                 {currentUser && nav("/messages", t("messages", lang))}
