@@ -60,7 +60,7 @@ export default function SeekerHome() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={lang === "fr" ? "Métier, compétence, ville..." : "Job, skill, city..."}
-            className="bg-white/90 text-foreground placeholder:text-muted-foreground"
+            className="bg-white/90 text-gray-900 placeholder:text-gray-500"
           />
           <Button
             type="button"
