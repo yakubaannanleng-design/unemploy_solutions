@@ -1,7 +1,7 @@
 ﻿// En-tête de navigation de l'application Workca.
 import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart, Search } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLang, t } from "../../lib/i18n";
 import Logo from "./Logo";
 import { Button } from "../ui/button";
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { useStore } from "../../lib/store";
 import type { User as UserType } from "../../types";
 
 interface HeaderProps {
@@ -26,6 +27,38 @@ interface HeaderProps {
 
 export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers, unreadCount = 0 }: HeaderProps) {
   const { lang, setLang } = useLang();
+  const { state, update, patch } = useStore();
+  const navigate = useNavigate();
+  const switchMode = (newRole: string) => {
+    if (!currentUser) return;
+    update("users", state.users.map((u) => (u.id === currentUser.id ? { ...u, role: newRole as any } : u)));
+    if (newRole === "employeur" && !state.employers.some((e) => e.userId === currentUser.id)) {
+      patch("employers", {
+        userId: currentUser.id,
+        orgName: currentUser.name,
+        description: "",
+        orgType: "entreprise",
+        verification: "déclaré",
+        verificationRequested: false,
+      } as any);
+    }
+    if (newRole === "chercheur" && !state.seekers.some((s) => s.userId === currentUser.id)) {
+      patch("seekers", {
+        userId: currentUser.id,
+        bio: "",
+        skills: [],
+        categories: [],
+        contractWanted: [],
+        availability: "immédiatement",
+        zone: { region: "Centre", city: "Yaoundé", quartier: "" },
+        radiusKm: 10,
+        experience: "",
+        languages: ["français"],
+        missionsDone: 0,
+      } as any);
+    }
+    navigate("/" + newRole);
+  };
   const location = { pathname: typeof window !== "undefined" ? window.location.pathname : "/" };
   const [open, setOpen] = useState(false);
   const unread = unreadCount;
@@ -59,6 +92,16 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
               <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
               Déconnecté
             </span>
+          )}
+          {currentUser && currentUser.role !== "admin" && (
+            <select
+              value={currentUser.role}
+              onChange={(e) => switchMode(e.target.value)}
+              className="hidden sm:block rounded-md border border-input bg-background px-2 py-1 text-xs"
+            >
+              <option value="chercheur">{lang === "fr" ? "Mode chercheur" : "Seeker mode"}</option>
+              <option value="employeur">{lang === "fr" ? "Mode employeur" : "Employer mode"}</option>
+            </select>
           )}
         </div>
 
