@@ -1,5 +1,0 @@
-const fs = require("fs");
-const p = "f:/Mes_Projets/unemploy_solutions/emploica/src/components/auth/AuthAnimated.tsx";
-const raw = fs.readFileSync(p, "utf8");
-const lines = raw.split(/\r?\n/);
-for (let i = 86; i <= 125; i++) console.log(i+1, lines[i]);
