@@ -49,10 +49,15 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
       <div className="container flex h-14 items-center justify-between gap-3 px-4">
         <div className="flex items-center gap-2">
           <Logo size={36} showText />
-          {currentUser && (
+          {currentUser ? (
             <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-brand-100 dark:bg-brand-900/40 px-2 py-0.5 text-xs font-medium text-brand-700 dark:text-brand-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
               Connecté : {currentUser.name}
+            </span>
+          ) : (
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+              Déconnecté
             </span>
           )}
         </div>
