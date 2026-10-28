@@ -89,6 +89,14 @@ export default function OfferDetailModal({
             <span className="font-semibold">{t("description", lang)} : </span>
             {offer.description}
           </div>
+          {offer.imageUrl && (
+            <img src={offer.imageUrl} alt={offer.title} className="rounded-md max-h-64 w-full object-cover" />
+          )}
+          {offer.documentUrl && (
+            <a href={offer.documentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline text-sm">
+              📄 {lang === "fr" ? "Voir le document" : "View document"}
+            </a>
+          )}
           {offer.tasks.length > 0 && (
             <div>
               <span className="font-semibold">{t("tasks", lang)} : </span>

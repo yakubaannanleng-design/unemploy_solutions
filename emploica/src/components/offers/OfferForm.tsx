@@ -43,6 +43,8 @@ export default function OfferForm({ initial, onSubmit, onCancel }: OfferFormProp
   const [schedule, setSchedule] = useState(initial?.schedule ?? "");
   const [pay, setPay] = useState(initial?.pay ?? "");
   const [payMode, setPayMode] = useState<"fixe" | "négocier">(initial?.payMode ?? "fixe");
+  const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? "");
+  const [documentUrl, setDocumentUrl] = useState(initial?.documentUrl ?? "");
 
   const employerId = currentUser?.id ?? "u-employer";
 
@@ -62,6 +64,8 @@ export default function OfferForm({ initial, onSubmit, onCancel }: OfferFormProp
       schedule,
       pay,
       payMode,
+      imageUrl: imageUrl || undefined,
+      documentUrl: documentUrl || undefined,
       createdAt: new Date().toISOString(),
       status: "en-attente",
       boost: false,
@@ -150,6 +154,14 @@ export default function OfferForm({ initial, onSubmit, onCancel }: OfferFormProp
             <SelectItem value="négocier">À négocier</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      <div>
+        <Label>{lang === "fr" ? "Image (URL)" : "Image (URL)"}</Label>
+        <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
+      </div>
+      <div>
+        <Label>{lang === "fr" ? "Document (URL)" : "Document (URL)"}</Label>
+        <Input value={documentUrl} onChange={(e) => setDocumentUrl(e.target.value)} placeholder="https://..." />
       </div>
       <Separator />
       <p className="text-xs text-muted-foreground">{t("antiScam", lang)}</p>

@@ -50,6 +50,14 @@ export default function OfferCard({ offer, onClick, onApply, alreadyApplied, isF
         )}
       </div>
       <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{offer.description}</p>
+      {offer.imageUrl && (
+        <img src={offer.imageUrl} alt={offer.title} className="mt-3 rounded-md max-h-48 w-full object-cover" />
+      )}
+      {offer.documentUrl && (
+        <a href={offer.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline">
+          📄 {lang === "fr" ? "Voir le document" : "View document"}
+        </a>
+      )}
       <div className="mt-3 space-y-1 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {offer.location.city}{offer.location.quartier ? `, ${offer.location.quartier}` : ""}</div>
         <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {offer.schedule}</div>

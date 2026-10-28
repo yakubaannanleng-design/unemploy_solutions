@@ -48,6 +48,23 @@ function Field({ label, type = "text", icon, index, name }: FieldProps) {
 export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimatedProps) {
   const [mode, setMode] = useState<Mode>("login");
   const isLogin = mode === "login";
+  const { lang, setLang } = useLang();
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const handleSocial = async (provider: "google" | "apple") => {
+    if (!supabase) { toast.error("Service d'authentification indisponible."); return; }
+    const { error: authError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + "/" } });
+    if (authError) toast.error(authError.message);
+  };
+
+  const handleForgotPassword = async () => {
+    const email = window.prompt("Entre ton email pour réinitialiser le mot de passe :");
+    if (!email) return;
+    if (!supabase) { toast.error("Service indisponible."); return; }
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/login" });
+    if (resetError) toast.error(resetError.message);
+    else toast.success("Email de réinitialisation envoyé.");
+  };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -96,6 +96,8 @@ export interface Offer {
   status: OfferStatus;
   boost: boolean;
   views: number;
+  imageUrl?: string;
+  documentUrl?: string;
 }
 
 export interface Application {
