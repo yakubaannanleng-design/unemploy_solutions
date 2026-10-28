@@ -51,7 +51,7 @@ export default function OfferCard({ offer, onClick, onApply, alreadyApplied, isF
       </div>
       <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{offer.description}</p>
       <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {offer.location.city}, {offer.location.quartier}</div>
+        <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {offer.location.city}{offer.location.quartier ? `, ${offer.location.quartier}` : ""}</div>
         <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {offer.schedule}</div>
         <div className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5" /> {payLabel}</div>
         <div className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5" /> {offer.duration} · {offer.contract}</div>

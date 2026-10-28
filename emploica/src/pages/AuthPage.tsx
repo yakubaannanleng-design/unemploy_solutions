@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useStore } from "../lib/store";
 import type { User } from "../types";
 import AuthAnimated from "../components/auth/AuthAnimated";
+import { useLang } from "../lib/i18n";
 import { supabase } from "../lib/supabase";
 
 interface AuthPageProps {
@@ -10,40 +11,55 @@ interface AuthPageProps {
 }
 
 export default function AuthPage({ onLogin }: AuthPageProps = {}) {
+  const { lang } = useLang();
   const { state, patch } = useStore();
   const [error, setError] = useState("");
 
   const handleLogin = async (values: { username: string; password: string }) => {
+    // Résoudre l'email à utiliser pour Supabase Auth
+    let emailToTry = values.username;
+    if (!values.username.includes("@")) {
+      const candidate = state.users.find(
+        (x) =>
+          x.name === values.username ||
+          x.phone === values.username ||
+          x.email === values.username
+      );
+      if (candidate?.email) emailToTry = candidate.email;
+    }
+
     // 1) Tentative Supabase Auth (email)
-    if (supabase && values.username.includes("@")) {
+    let supabaseError: string | null = null;
+    if (supabase && emailToTry.includes("@")) {
       try {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: values.username,
+          email: emailToTry,
           password: values.password,
         });
         if (!authError && data.user) {
-          // Trouver ou créer le profil local
-          let u = state.users.find((x) => x.email === values.username || x.id === data.user.id);
+          let u = state.users.find((x) => x.email === emailToTry || x.id === data.user.id);
           if (!u) {
             u = {
               id: data.user.id,
               role: "chercheur",
-              name: data.user.user_metadata?.name ?? values.username.split("@")[0],
+              name: data.user.user_metadata?.name ?? emailToTry.split("@")[0],
               phone: data.user.user_metadata?.phone ?? "",
-              email: values.username,
-              passwordHash: "",
+              email: emailToTry,
+              passwordHash: values.password,
               status: "actif",
               verification: "déclaré",
               createdAt: new Date().toISOString(),
             };
             patch("users", u);
-          }
+
           setError("");
           onLogin?.(u);
           return;
         }
-      } catch {
-        /* fallback local */
+        }
+        if (authError) supabaseError = authError.message;
+      } catch (e: any) {
+        supabaseError = e?.message ?? null;
       }
     }
 
@@ -52,15 +68,23 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
       (x) =>
         (x.phone === values.username ||
           x.email === values.username ||
-          x.name === values.username) &&
-        x.passwordHash === values.password
+          x.name === values.username ||
+          x.email === emailToTry)
     );
     if (u) {
-      setError("");
-      onLogin?.(u);
-    } else {
-      setError("Identifiants invalides. Utilisez les comptes démo (mot de passe demo123).");
+      // Si un hash est stocké, il doit correspondre ; sinon (compte Supabase non confirmé) on laisse passer
+      if (u.passwordHash === "" || u.passwordHash === values.password) {
+        setError("");
+        onLogin?.(u);
+        return;
+      }
     }
+
+    const msg =
+      supabaseError && /confirm/i.test(supabaseError)
+        ? "Confirme ton email avant de te connecter (vérifie ta boîte mail), ou crée un compte."
+        : "Email ou mot de passe incorrect. Réessaie, ou crée un compte.";
+    setError(lang === "fr" ? msg : "Incorrect email or password. Try again, or create an account.");
   };
 
   const handleRegister = async (values: { username: string; email: string; password: string }) => {
@@ -86,7 +110,7 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
           name: username,
           phone: username.startsWith("+") ? username : "+237 " + username,
           email,
-          passwordHash: "",
+          passwordHash: values.password,
           status: "actif",
           verification: "déclaré",
           createdAt: new Date().toISOString(),

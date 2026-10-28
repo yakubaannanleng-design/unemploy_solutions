@@ -175,6 +175,17 @@ export default function SettingsView() {
           <div>Workca v0.0.0</div>
           <div>{lang === "fr" ? "Plateforme de mise en relation emploi au Cameroun." : "Job matching platform in Cameroon."}</div>
           <div className="font-medium text-foreground">{lang === "fr" ? "Proprietaire / Developpeur" : "Owner / Developer"} : MADI OUMAROU YAKUBA</div>
+          <div className="space-y-1 pt-1">
+            <a href="mailto:yakubaannanleng@gmail.com" className="flex items-center gap-1 text-primary hover:underline">
+              <Mail className="h-3 w-3" /> yakubaannanleng@gmail.com
+            </a>
+            <a href="tel:+237694073533" className="flex items-center gap-1 text-primary hover:underline">
+              <Phone className="h-3 w-3" /> +237 694-073-533
+            </a>
+            <a href="https://wa.me/237672069569" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+              <Phone className="h-3 w-3" /> WhatsApp +237 672-069-569
+            </a>
+          </div>
 
           <Separator />
           <Link to="/conditions" className="text-primary hover:underline flex items-center gap-1">

@@ -43,7 +43,7 @@ export default function FlashOffersView() {
                 <div>
                   <div className="font-semibold">{offer.title}</div>
                   <div className="text-xs text-muted-foreground">
-                    {lang === "fr" ? cat?.name : cat?.nameEn} · {offer.location.city}, {offer.location.quartier}
+                    {lang === "fr" ? cat?.name : cat?.nameEn} · {offer.location.city}{offer.location.quartier ? `, ${offer.location.quartier}` : ""}
                   </div>
                 </div>
               </div>

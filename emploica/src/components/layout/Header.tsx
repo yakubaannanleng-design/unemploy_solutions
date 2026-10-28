@@ -46,7 +46,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-14 items-center justify-between gap-3">
+      <div className="container flex h-14 items-center justify-between gap-3 px-4">
         <div className="flex items-center gap-2">
           <Logo size={36} showText />
           {currentUser && (

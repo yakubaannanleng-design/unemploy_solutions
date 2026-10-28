@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import "./auth-animated.css";
 
 type Mode = "login" | "register";
@@ -32,12 +32,25 @@ type FieldProps = {
 };
 
 function Field({ label, type = "text", icon, index, name }: FieldProps) {
+  const [show, setShow] = useState(false);
+  const inputType = type === "password" ? (show ? "text" : "password") : type;
   const Icon = { user: User, mail: Mail, lock: Lock }[icon];
   return (
     <div className="field anim" style={step(index)}>
-      <input name={name} type={type} placeholder=" " required />
+      <input name={name} type={inputType} placeholder=" " required />
       <label>{label}</label>
       <Icon aria-hidden="true" />
+      {type === "password" && (
+        <button
+          type="button"
+          onClick={() => setShow((v) => !v)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+          tabIndex={-1}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )}
     </div>
   );
 }

@@ -160,3 +160,5 @@ $RECYCLE.BIN/
 .env.production
  secrets
 *.pem
+# Tooling sessions
+.omo/

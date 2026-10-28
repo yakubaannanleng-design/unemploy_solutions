@@ -3,6 +3,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./lib/store";
+import { Skeleton } from "./components/ui/skeleton";
 import { Toaster } from "./components/ui/sonner";
 import { useLang, t } from "./lib/i18n";
 import { supabase } from "./lib/supabase";
@@ -310,7 +311,7 @@ export default function App() {
         demoUsers={DEMO_USERS}
       />
       <main id="main-content" className="container px-4 py-6">
-        <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Chargement…</div>}>
+        <Suspense fallback={<div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-32 w-full" /><Skeleton className="h-32 w-full" /></div>}>
         <Routes>
           <Route path="/login" element={<AuthPage onLogin={login} />} />
           <Route
@@ -411,7 +412,12 @@ export default function App() {
         </Suspense>
       </main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        <div className="container">{t("antiScam", lang)} {"\u00B7"} {"\u00A9"} {new Date().getFullYear()} MADI OUMAROU YAKUBA {"\u2014"} Workca</div>
+        <div className="container px-4">
+          <div>{t("antiScam", lang)} {"·"} {"©"} {new Date().getFullYear()} MADI OUMAROU YAKUBA {"—"} Workca</div>
+          <div className="mt-1">
+            <a href="mailto:yakubaannanleng@gmail.com" className="hover:underline">yakubaannanleng@gmail.com</a> {"·"} <a href="tel:+237694073533" className="hover:underline">+237 694-073-533</a> {"·"} <a href="https://wa.me/237672069569" target="_blank" rel="noreferrer" className="hover:underline">WhatsApp +237 672-069-569</a>
+          </div>
+        </div>
       </footer>
       {isAuthed && <BottomNav currentUser={currentUser} />}
       <Toaster />

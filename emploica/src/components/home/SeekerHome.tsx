@@ -1,11 +1,13 @@
 // Composant de l interface utilisateur
+import { useState } from "react";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MessageSquare, Briefcase, MapPin, Star } from "lucide-react";
 import { categoryById } from "../../data/categories";
 import { getIcon } from "../../lib/iconMap";
@@ -13,6 +15,8 @@ import { getIcon } from "../../lib/iconMap";
 export default function SeekerHome() {
   const { lang } = useLang();
   const { state, currentUser } = useStore();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
   const seeker = state.seekers.find((s) => s.userId === currentUser.id);
   const cat = seeker ? categoryById(seeker.categories[0]) : null;
 
@@ -40,7 +44,7 @@ export default function SeekerHome() {
         <div>
           <h2 className="text-xl font-semibold">{t("jobSeeker", lang)} — {currentUser.name}</h2>
           <p className="text-sm text-muted-foreground">
-            {seeker ? `${seeker.missionsDone} ${lang === "fr" ? "missions terminées" : "jobs done"}` : ""}
+            {seeker ? (seeker.missionsDone > 0 ? `${seeker.missionsDone} ${lang === "fr" ? "missions terminées" : "jobs done"}` : (lang === "fr" ? (<>Aucune pour l'instant. <Link to="/offres" className="text-primary hover:underline">Postule à ta première offre</Link></>) : (<>None yet. <Link to="/offres" className="text-primary hover:underline">Apply to your first offer</Link></>))) : ""}
           </p>
         </div>
         <Link to="/profil">
@@ -48,13 +52,33 @@ export default function SeekerHome() {
         </Link>
       </div>
 
+      <div className="rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 p-6 text-white shadow-lg">
+        <h3 className="text-xl font-bold mb-1">{lang === "fr" ? "Trouvez votre prochain emploi" : "Find your next job"}</h3>
+        <p className="text-sm opacity-90 mb-4">{lang === "fr" ? "Des milliers d'offres près de chez vous, au Cameroun." : "Thousands of jobs near you, in Cameroon."}</p>
+        <div className="flex gap-2">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={lang === "fr" ? "Métier, compétence, ville..." : "Job, skill, city..."}
+            className="bg-white/90 text-foreground placeholder:text-muted-foreground"
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate("/offres" + (search ? "?q=" + encodeURIComponent(search) : ""))}
+          >
+            {lang === "fr" ? "Rechercher" : "Search"}
+          </Button>
+        </div>
+      </div>
+
       {seeker && (
         <Card>
           <CardHeader><CardTitle>{t("profile", lang)}</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold">
-                {currentUser.name.charAt(0)}
+              <div className="h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold overflow-hidden" style={{ backgroundColor: `hsl(${(currentUser.name.charCodeAt(0) * 37) % 360}, 60%, 45%)` }}>
+                {seeker?.photo ? <img src={seeker.photo} alt={currentUser.name} className="h-full w-full object-cover" /> : <span className="text-white">{currentUser.name.charAt(0).toUpperCase()}</span>}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -62,7 +86,7 @@ export default function SeekerHome() {
                   {seeker.rating && <Star className="h-4 w-4 text-brand-500" fill="currentColor" />}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {cat ? (lang === "fr" ? cat.name : cat.nameEn) : "—"} · {seeker.zone.city}
+                  {cat ? `${lang === "fr" ? cat.name : cat.nameEn} · ` : ""}{seeker.zone.city}
                 </p>
                 <p className="text-sm text-muted-foreground">{seeker.bio}</p>
               </div>
@@ -111,7 +135,7 @@ function OfferPreview({ offer }: { offer: any }) {
           <div>
             <div className="font-medium">{offer.title}</div>
             <div className="text-xs text-muted-foreground">
-              {offer.location.city}, {offer.location.quartier} · {offer.contract} · {offer.duration}
+              {offer.location.city}{offer.location.quartier ? `, ${offer.location.quartier}` : ""} · {offer.contract} · {offer.duration}
             </div>
           </div>
         </div>
