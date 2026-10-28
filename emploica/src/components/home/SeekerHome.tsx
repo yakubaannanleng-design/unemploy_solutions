@@ -1,12 +1,10 @@
 // Composant de l interface utilisateur
 import { useState } from "react";
-import { useState } from "react";
 import { useStore } from "../../lib/store";
 import { useLang, t } from "../../lib/i18n";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
 import { Link, useNavigate } from "react-router-dom";
@@ -17,8 +15,6 @@ import { getIcon } from "../../lib/iconMap";
 export default function SeekerHome() {
   const { lang } = useLang();
   const { state, currentUser } = useStore();
-  const navigate = useNavigate();
-  const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const seeker = state.seekers.find((s) => s.userId === currentUser.id);
@@ -54,26 +50,6 @@ export default function SeekerHome() {
         <Link to="/profil">
           <Button variant="outline" size="sm">{t("profile", lang)}</Button>
         </Link>
-      </div>
-
-      <div className="rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 p-6 text-white shadow-lg">
-        <h3 className="text-xl font-bold mb-1">{lang === "fr" ? "Trouvez votre prochain emploi" : "Find your next job"}</h3>
-        <p className="text-sm opacity-90 mb-4">{lang === "fr" ? "Des milliers d'offres près de chez vous, au Cameroun." : "Thousands of jobs near you, in Cameroon."}</p>
-        <div className="flex gap-2">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={lang === "fr" ? "Métier, compétence, ville..." : "Job, skill, city..."}
-            className="bg-white/90 text-foreground placeholder:text-muted-foreground"
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate("/offres" + (search ? "?q=" + encodeURIComponent(search) : ""))}
-          >
-            {lang === "fr" ? "Rechercher" : "Search"}
-          </Button>
-        </div>
       </div>
 
       <div className="rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 p-6 text-white shadow-lg">
@@ -140,6 +116,11 @@ export default function SeekerHome() {
             {recommended.map((o) => (
               <OfferPreview key={o.id} offer={o} />
             ))}
+          </div>
+          <div className="pt-2">
+            <Link to="/offres">
+              <Button variant="outline" size="sm">{lang === "fr" ? "Voir toutes les offres" : "View all offers"}</Button>
+            </Link>
           </div>
         )}
       </div>
