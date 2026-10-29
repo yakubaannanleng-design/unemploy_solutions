@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
 import { StoreProvider } from "../lib/store";
-import OffersView from "../components/views/OffersView";
+import { OffersView } from "features/jobs";
 
 vi.mock("../lib/supabase", () => ({
   supabase: null,

@@ -1,10 +1,17 @@
+/**
+ * PROBLÈME RÉSOLU : affiche une carte résumée d'une offre d'emploi.
+ * RESPONSABILITÉ  : rendu de la carte offre (titre, catégorie, lieu, rémunération, actions postuler/favori).
+ * NE FAIT PAS     : ne parle pas à Supabase ; ne gère pas le détail complet (délégué à OfferDetailModal).
+ * DÉPEND DE       : lib/i18n, lib/iconMap, data/categories, components/ui/*.
+ * UTILISÉ PAR     : features/jobs (OffersView, FlashOffersView), features/favorites, features/search.
+ */
 import { MapPin, Clock, Banknote, Briefcase, Eye, Heart } from "lucide-react";
-import { useLang, t } from "../../lib/i18n";
-import { categoryById } from "../../data/categories";
-import { getIcon } from "../../lib/iconMap";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import type { Offer } from "../../types";
+import { useLang, t } from "lib/i18n";
+import { categoryById } from "@/data/categories";
+import { getIcon } from "lib/iconMap";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import type { Offer } from "@/types";
 
 interface OfferCardProps {
   offer: Offer;

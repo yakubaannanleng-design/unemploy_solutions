@@ -1,9 +1,16 @@
+/**
+ * PROBLÈME RÉSOLU : affiche les offres flash (boulots éclair) et permet d'y postuler.
+ * RESPONSABILITÉ  : rendu de la vue FlashOffers et mise à jour du compteur de candidats dans le store.
+ * NE FAIT PAS     : ne parle pas à Supabase ; ne gère pas la création d'offres flash.
+ * DÉPEND DE       : lib/i18n, lib/store, data/categories, components/ui/*.
+ * UTILISÉ PAR     : app (route /boulots-eclair).
+ */
 import { Zap, Clock, Users, MapPin } from "lucide-react";
-import { useLang, t } from "../../lib/i18n";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { useStore } from "../../lib/store";
-import { categoryById } from "../../data/categories";
+import { useLang, t } from "lib/i18n";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import { useStore } from "lib/store";
+import { categoryById } from "@/data/categories";
 import { useState } from "react";
 
 export default function FlashOffersView() {

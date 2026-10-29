@@ -10,8 +10,7 @@ import { useState } from "react";
 import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
 import { Heart } from "lucide-react";
-import OfferCard from "components/offers/OfferCard";
-import OfferDetailModal from "components/offers/OfferDetailModal";
+import { OfferCard, OfferDetailModal } from "features/jobs";
 import type { Offer } from "@/types";
 
 export default function FavoritesView() {

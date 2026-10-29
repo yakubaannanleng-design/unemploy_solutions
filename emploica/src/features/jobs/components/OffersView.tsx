@@ -1,20 +1,27 @@
-﻿import { useState } from "react";
+﻿/**
+ * PROBLÈME RÉSOLU : affiche la liste des offres avec filtres, candidature, favori, signalement, contact, boost et notation.
+ * RESPONSABILITÉ  : rendu de l'écran Offres et orchestration des actions (logique non encore extraite).
+ * NE FAIT PAS     : ne définit pas les composants de carte/détail (OfferCard, OfferDetailModal).
+ * DÉPEND DE       : lib/store, lib/supabase, lib/i18n, components/ui/*, features/jobs (OfferCard, OfferDetailModal), features/ratings, components/common/LocationFilter, components/home/CategoryGrid.
+ * UTILISÉ PAR     : app (route /offres), features/favorites, features/search (via OfferCard/OfferDetailModal).
+ */
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useStore } from "../../lib/store";
-import { supabase } from "../../lib/supabase";
-import { useLang, t } from "../../lib/i18n";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { Separator } from "../ui/separator";
-import OfferCard from "../offers/OfferCard";
-import OfferDetailModal from "../offers/OfferDetailModal";
+import { useStore } from "lib/store";
+import { supabase } from "lib/supabase";
+import { useLang, t } from "lib/i18n";
+import { Input } from "components/ui/input";
+import { Button } from "components/ui/button";
+import { Badge } from "components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "components/ui/select";
+import { Sheet, SheetContent, SheetTrigger } from "components/ui/sheet";
+import { Separator } from "components/ui/separator";
+import OfferCard from "./OfferCard";
+import OfferDetailModal from "./OfferDetailModal";
 import RatingModal from "features/ratings";
-import LocationFilter from "../common/LocationFilter";
-import CategoryGrid from "../home/CategoryGrid";
-import type { Offer } from "../../types";
+import LocationFilter from "components/common/LocationFilter";
+import CategoryGrid from "components/home/CategoryGrid";
+import type { Offer } from "@/types";
 
 export default function OffersView() {
   const { lang } = useLang();

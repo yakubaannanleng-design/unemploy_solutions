@@ -1,16 +1,23 @@
-import { useLang, t } from "../../lib/i18n";
-import { useStore } from "../../lib/store";
+/**
+ * PROBLÈME RÉSOLU : formulaire de création/publication d'une offre d'emploi.
+ * RESPONSABILITÉ  : rendu du formulaire et construction de l'objet Offer, puis appel du callback onSubmit.
+ * NE FAIT PAS     : ne parle pas à Supabase (délégué à l'appelant) ; ne gère pas la liste des offres.
+ * DÉPEND DE       : lib/i18n, lib/store, components/ui/*, components/home/CategoryGrid, components/common/LocationFilter, data/mockData (makeId), types.
+ * UTILISÉ PAR     : app (route /offres/nouveau), features/dashboard (EmployerHome, temporaire).
+ */
+import { useLang, t } from "lib/i18n";
+import { useStore } from "lib/store";
 import { useState } from "react";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Button } from "../ui/button";
-import { Label } from "../ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Separator } from "../ui/separator";
-import CategoryGrid from "../home/CategoryGrid";
-import LocationFilter from "../common/LocationFilter";
-import type { ContractType, Offer } from "../../types";
-import { makeId } from "../../data/mockData";
+import { Input } from "components/ui/input";
+import { Textarea } from "components/ui/textarea";
+import { Button } from "components/ui/button";
+import { Label } from "components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "components/ui/select";
+import { Separator } from "components/ui/separator";
+import CategoryGrid from "components/home/CategoryGrid";
+import LocationFilter from "components/common/LocationFilter";
+import type { ContractType, Offer } from "@/types";
+import { makeId } from "@/data/mockData";
 
 const CONTRACTS: { value: ContractType; key: string }[] = [
   { value: "permanent", key: "permanent" },

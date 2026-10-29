@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
 import { Search, Briefcase, User, MessageSquare } from "lucide-react";
-import OfferCard from "components/offers/OfferCard";
+import { OfferCard } from "features/jobs";
 import { useNavigate } from "react-router-dom";
 
 export default function SearchView() {

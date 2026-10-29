@@ -10,7 +10,7 @@ import { Separator } from "../ui/separator";
 import { Briefcase, Users, Eye, MessageSquare, Banknote, Zap, BookOpen, Star } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 const EmployerCharts = lazy(() => import("./EmployerCharts"));
-import OfferForm from "../offers/OfferForm";
+import { OfferForm } from "features/jobs";
 import type { Offer } from "../../types";
 
 export default function EmployerHome() {

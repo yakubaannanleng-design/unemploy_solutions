@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import OfferForm from "../components/offers/OfferForm";
+import { OfferForm } from "features/jobs";
 
 vi.mock("../lib/store", () => ({
   useStore: () => ({

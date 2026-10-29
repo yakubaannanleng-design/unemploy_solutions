@@ -1,13 +1,20 @@
+/**
+ * PROBLÈME RÉSOLU : affiche le détail complet d'une offre et ses actions (postuler, contacter, booster, signaler, noter).
+ * RESPONSABILITÉ  : rendu du modal de détail d'offre et affichage des données.
+ * NE FAIT PAS     : ne parle pas directement à Supabase ; les actions sont déléguées aux callbacks.
+ * DÉPEND DE       : lib/i18n, lib/store, data/categories, lib/iconMap, components/ui/*.
+ * UTILISÉ PAR     : features/jobs (OffersView), features/favorites.
+ */
 import { MapPin, Star } from "lucide-react";
-import { useLang, t } from "../../lib/i18n";
-import { useStore } from "../../lib/store";
-import { categoryById } from "../../data/categories";
-import { getIcon } from "../../lib/iconMap";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { Separator } from "../ui/separator";
-import type { Offer } from "../../types";
+import { useLang, t } from "lib/i18n";
+import { useStore } from "lib/store";
+import { categoryById } from "@/data/categories";
+import { getIcon } from "lib/iconMap";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "components/ui/dialog";
+import { Separator } from "components/ui/separator";
+import type { Offer } from "@/types";
 
 interface OfferDetailModalProps {
   offer: Offer | null;
