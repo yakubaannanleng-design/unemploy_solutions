@@ -20,7 +20,7 @@ const NotificationsView = lazy(() => import("./components/views/NotificationsVie
 const FlashOffersView = lazy(() => import("./components/home/FlashOffersView"));
 const SettingsView = lazy(() => import("features/settings"));
 const FavoritesView = lazy(() => import("./components/views/FavoritesView"));
-const SearchView = lazy(() => import("./components/views/SearchView"));
+const SearchView = lazy(() => import("features/search"));
 const TermsView = lazy(() => import("./components/views/TermsView"));
 const PrivacyView = lazy(() => import("./components/views/PrivacyView"));
 const LicensesView = lazy(() => import("./components/views/LicensesView"));

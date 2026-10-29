@@ -1,9 +1,16 @@
+/**
+ * PROBLÈME RÉSOLU : affiche la recherche globale (offres, utilisateurs, messages) et filtre les résultats.
+ * RESPONSABILITÉ  : rendu de l'écran Recherche et filtrage local des données du store.
+ * NE FAIT PAS     : ne parle pas à Supabase ; ne gère pas la création/modification de données.
+ * DÉPEND DE       : lib/store, lib/i18n, components/offers/OfferCard, react-router-dom.
+ * UTILISÉ PAR     : app (route /recherche).
+ */
 // Vue de recherche globale : offres, utilisateurs, messages.
 import { useState } from "react";
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
 import { Search, Briefcase, User, MessageSquare } from "lucide-react";
-import OfferCard from "../offers/OfferCard";
+import OfferCard from "components/offers/OfferCard";
 import { useNavigate } from "react-router-dom";
 
 export default function SearchView() {
