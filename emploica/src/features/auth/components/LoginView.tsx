@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import Logo from "../layout/Logo";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
+import { Input } from "components/ui/input";
+import { Button } from "components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import Logo from "components/layout/Logo";
 
 export default function LoginView() {
   const { lang } = useLang();

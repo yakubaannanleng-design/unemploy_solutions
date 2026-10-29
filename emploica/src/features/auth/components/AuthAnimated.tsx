@@ -1,7 +1,7 @@
 ﻿import { useState, type CSSProperties, type FormEvent } from "react";
 import { User, Mail, Lock, Eye, EyeOff, Globe } from "lucide-react";
-import { useLang } from "../../lib/i18n";
-import { supabase } from "../../lib/supabase";
+import { useLang } from "lib/i18n";
+import { supabase } from "lib/supabase";
 import { toast } from "sonner";
 import "./auth-animated.css";
 

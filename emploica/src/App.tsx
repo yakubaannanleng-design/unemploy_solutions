@@ -26,7 +26,7 @@ const PrivacyView = lazy(() => import("./components/views/PrivacyView"));
 const LicensesView = lazy(() => import("./components/views/LicensesView"));
 import type { User, Offer, Rating } from "./types";
 import { DEMO_USERS } from "./data/mockData";
-const AuthPage = lazy(() => import("./pages/AuthPage"));
+const AuthPage = lazy(() => import("features/auth"));
 
 // Liste des routes qui nécessitent d'être connecté.
 const PROTECTED_ROUTES = [

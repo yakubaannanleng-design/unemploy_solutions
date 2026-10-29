@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
-import AuthPage from "../pages/AuthPage";
+import AuthPage from "../features/auth";
 
 vi.mock("../lib/supabase", () => ({
   supabase: null,

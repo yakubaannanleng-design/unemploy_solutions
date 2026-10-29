@@ -1,10 +1,10 @@
 ﻿// Page d'authentification de Workca (animée) — intégrée avec Supabase Auth.
 import { useState } from "react";
-import { useUsers } from "../hooks/useUsers";
-import type { User } from "../types";
-import AuthAnimated from "../components/auth/AuthAnimated";
-import { useLang } from "../lib/i18n";
-import { supabase } from "../lib/supabase";
+import { useUsers } from "@/hooks/useUsers";
+import type { User } from "@/types";
+import AuthAnimated from "./AuthAnimated";
+import { useLang } from "lib/i18n";
+import { supabase } from "lib/supabase";
 
 interface AuthPageProps {
   onLogin?: (u: User) => void;

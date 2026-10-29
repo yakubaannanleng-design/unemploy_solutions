@@ -21,7 +21,7 @@ Suivi de la restructuration par domaines.
 - [x] applications
 - [x] admin
 - [x] dashboard
-- [ ] auth
+- [x] auth
 - [ ] layout / common / pages légales
 - [ ] App.tsx (par petits morceaux)
 - [ ] store.ts
