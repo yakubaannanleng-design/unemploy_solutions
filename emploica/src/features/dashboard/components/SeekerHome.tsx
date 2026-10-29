@@ -1,16 +1,16 @@
 // Composant de l interface utilisateur
 import { useState } from "react";
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Separator } from "../ui/separator";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
+import { Badge } from "components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Button } from "components/ui/button";
+import { Input } from "components/ui/input";
+import { Separator } from "components/ui/separator";
 import { Link, useNavigate } from "react-router-dom";
 import { MessageSquare, Briefcase, MapPin, Star } from "lucide-react";
-import { categoryById } from "../../data/categories";
-import { getIcon } from "../../lib/iconMap";
+import { categoryById } from "@/data/categories";
+import { getIcon } from "lib/iconMap";
 
 export default function SeekerHome() {
   const { lang } = useLang();

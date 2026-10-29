@@ -1,7 +1,7 @@
 // Carte des graphiques du tableau de bord employeur (chargée à la demande pour alléger le bundle).
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { useLang, t } from "../../lib/i18n";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { useLang, t } from "lib/i18n";
 
 interface EmployerChartsProps {
   appsByStatus: { name: string; value: number }[];

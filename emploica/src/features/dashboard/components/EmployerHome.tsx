@@ -1,17 +1,17 @@
 // Composant de l interface utilisateur
-import { useStore } from "../../lib/store";
-import { supabase } from "../../lib/supabase";
-import { useLang, t } from "../../lib/i18n";
+import { useStore } from "lib/store";
+import { supabase } from "lib/supabase";
+import { useLang, t } from "lib/i18n";
 import { Link } from "react-router-dom";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "../ui/separator";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Separator } from "components/ui/separator";
 import { Briefcase, Users, Eye, MessageSquare, Banknote, Zap, BookOpen, Star } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 const EmployerCharts = lazy(() => import("./EmployerCharts"));
 import { OfferForm } from "features/jobs";
-import type { Offer } from "../../types";
+import type { Offer } from "@/types";
 
 export default function EmployerHome() {
   const { lang } = useLang();

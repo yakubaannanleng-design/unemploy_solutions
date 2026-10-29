@@ -20,7 +20,7 @@ Suivi de la restructuration par domaines.
 - [ ] employers (structure seule)
 - [x] applications
 - [x] admin
-- [ ] dashboard
+- [x] dashboard
 - [ ] auth
 - [ ] layout / common / pages légales
 - [ ] App.tsx (par petits morceaux)
@@ -43,3 +43,8 @@ Suivi de la restructuration par domaines.
 
 ## TODO techniques
 - `src/features/jobs/components/OfferCard.tsx:55` : `(offer as any).verification` — `Offer` n'a pas de champ `verification` (à typer proprement lors de l'étape B). Commentaire `// TODO: type Offer sans champ verification` ajouté.
+## Bugs découverts (à traiter après la restructuration)
+1. `OffersView:83` insère `status: "envoyee"` (sans accent) dans Supabase alors que le type `ApplicationStatus` et `STATUS_LABELS` attendent `"envoyée"` (accentué) → mauvais badge. Ne pas corriger maintenant.
+2. `AdminPanel` : toutes les actions de modération sont locales (store + localStorage), non persistées dans Supabase ; elles disparaissent au rechargement.
+3. Les notes (ratings) et la modification de profil ne sont enregistrées qu'en localStorage, pas dans Supabase.
+
