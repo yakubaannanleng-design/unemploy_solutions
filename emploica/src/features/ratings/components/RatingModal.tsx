@@ -1,9 +1,15 @@
+/**
+ * PROBLÈME RÉSOLU : affiche la modal de notation (étoiles + commentaire) pour un utilisateur cible.
+ * RESPONSABILITÉ  : rendu de la modal et collecte de la note/commentaire, puis appel du callback onSubmit.
+ * NE FAIT PAS     : n'enregistre pas la note (délégué à l'appelant via onSubmit) ; ne parle pas à Supabase.
+ * DÉPEND DE       : lib/i18n, components/ui/*.
+ * UTILISÉ PAR     : features/jobs (OffersView, temporaire) et features/profiles (ProfileView, temporaire).
+ */
 import { useState } from "react";
 import { Star } from "lucide-react";
-import { useLang, t } from "../../lib/i18n";
-import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { useStore } from "../../lib/store";
+import { useLang, t } from "lib/i18n";
+import { Button } from "components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "components/ui/dialog";
 
 interface RatingModalProps {
   open: boolean;

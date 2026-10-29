@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Separator } from "../ui/separator";
 import OfferCard from "../offers/OfferCard";
 import OfferDetailModal from "../offers/OfferDetailModal";
-import RatingModal from "../common/RatingModal";
+import RatingModal from "features/ratings";
 import LocationFilter from "../common/LocationFilter";
 import CategoryGrid from "../home/CategoryGrid";
 import type { Offer } from "../../types";
