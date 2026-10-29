@@ -14,7 +14,7 @@ import { Button } from "components/ui/button";
 import { Badge } from "components/ui/badge";
 import { ScrollArea } from "components/ui/scroll-area";
 import { Separator } from "components/ui/separator";
-import type { Message } from "@/types";
+import type { Conversation, Message } from "@/types";
 
 interface MessagingProps {
   conversationId: string | null;
@@ -36,7 +36,7 @@ export default function Messaging({ conversationId, otherId }: MessagingProps) {
         c.id === conv!.id
           ? { ...c, messages: c.messages.map((m) => (m.receiverId === currentUser.id ? { ...m, status: "lu" } : m)) }
           : c
-      )
+      ) as Conversation[]
     );
   }, [conversationId]);
 
