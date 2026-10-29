@@ -6,12 +6,14 @@
  * UTILISÉ PAR     : app (route /boulots-eclair).
  */
 import { Zap, Clock, Users, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLang, t } from "lib/i18n";
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import { useStore } from "lib/store";
 import { categoryById } from "@/data/categories";
 import { useState } from "react";
+import type { FlashOffer } from "@/types";
 
 export default function FlashOffersView() {
   const { lang } = useLang();

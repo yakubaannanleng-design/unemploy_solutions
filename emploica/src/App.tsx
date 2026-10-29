@@ -28,7 +28,7 @@ import type { User, Offer, Rating } from "./types";
 import { DEMO_USERS } from "./data/mockData";
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 
-// Liste des routes qui nÃ©cessitent d'Ãªtre connectÃ©.
+// Liste des routes qui nécessitent d'être connecté.
 const PROTECTED_ROUTES = [
   "/chercheur",
   "/employeur",
@@ -43,7 +43,7 @@ const PROTECTED_ROUTES = [
   "/favoris",
 ];
 
-// Wrapper qui protÃ¨ge une route : redirige vers /login si l'utilisateur n'est pas connectÃ©.
+// Wrapper qui protège une route : redirige vers /login si l'utilisateur n'est pas connecté.
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthed = window.localStorage.getItem("workca:me") !== null;
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ export default function App() {
     () => window.localStorage.getItem("workca:me") !== null
   );
 
-  // Restaure l'utilisateur connectÃ© depuis localStorage au chargement.
+  // Restaure l'utilisateur connecté depuis localStorage au chargement.
   useEffect(() => {
     if (supabase) {
       // 1) Session Supabase
@@ -284,7 +284,7 @@ export default function App() {
       type: "boost",
       amount: 500,
       operator: "Orange Money",
-      status: "rÃ©ussi",
+      status: "réussi",
       createdAt: new Date().toISOString(),
     });
   };
@@ -293,8 +293,8 @@ export default function App() {
     patch("ratings", { ...r, id: "rt-" + Math.random().toString(36).slice(2, 9) } as Rating);
   };
 
-  // Si l'utilisateur est connectÃ© et arrive sur la page d'accueil ou /login,
-  // on le redirige vers son tableau de bord selon son rÃ´le.
+  // Si l'utilisateur est connecté et arrive sur la page d'accueil ou /login,
+  // on le redirige vers son tableau de bord selon son rôle.
   if (isAuthed && currentUser && (location.pathname === "/" || location.pathname === "/login")) {
     return <Navigate to={"/" + currentUser.role} replace />;
   }

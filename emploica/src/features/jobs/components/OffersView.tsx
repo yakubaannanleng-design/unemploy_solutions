@@ -116,7 +116,7 @@ export default function OffersView() {
       type: "boost",
       amount: 500,
       operator: "Orange Money",
-      status: "rÃ©ussi",
+      status: "réussi",
       createdAt: new Date().toISOString(),
     });
   };

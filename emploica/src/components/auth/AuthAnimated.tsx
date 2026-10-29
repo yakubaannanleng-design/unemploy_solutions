@@ -15,11 +15,11 @@ type AuthAnimatedProps = {
   onLogin?: (values: LoginValues) => void | Promise<void>;
   /** Appelee a l'envoi du formulaire d'inscription */
   onRegister?: (values: RegisterValues) => void | Promise<void>;
-  /** Message d'erreur affichÃ© sous le formulaire visible */
+  /** Message d'erreur affiché sous le formulaire visible */
   error?: string;
 };
 
-// --li = dÃ©lai d'entrÃ©e, --lo = dÃ©lai de sortie (effet en cascade)
+// --li = délai d'entrée, --lo = délai de sortie (effet en cascade)
 const step = (i: number): CSSProperties =>
   ({ "--li": `${i * 0.1}s`, "--lo": `${i * 0.05}s` }) as CSSProperties;
 
@@ -65,12 +65,12 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleForgotPassword = async () => {
-    const email = window.prompt("Entre ton email pour rÃ©initialiser le mot de passe :");
+    const email = window.prompt("Entre ton email pour réinitialiser le mot de passe :");
     if (!email) return;
     if (!supabase) { toast.error("Service indisponible."); return; }
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/login" });
     if (resetError) toast.error(resetError.message);
-    else toast.success("Email de rÃ©initialisation envoyÃ©.");
+    else toast.success("Email de réinitialisation envoyé.");
   };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
@@ -105,12 +105,12 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
             <Field name="password" label="Mot de passe" type="password" icon="lock" index={2} />
             <div className="flex items-center justify-between text-sm mb-2">
               <button type="button" className="text-primary hover:underline" onClick={handleForgotPassword}>
-                Mot de passe oubliÃ© ?
+                Mot de passe oublié ?
               </button>
             </div>
             <label className="flex items-center gap-2 text-sm mb-3">
               <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-              Rester connectÃ©(e)
+              Rester connecté(e)
             </label>
             <button className="btn anim" style={step(3)} type="submit" tabIndex={isLogin ? 0 : -1}>
               Se connecter
@@ -119,7 +119,7 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
             <p className="switch anim" style={step(4)}>
               Pas encore de compte ?{" "}
               <button type="button" onClick={() => setMode("register")} tabIndex={isLogin ? 0 : -1}>
-                CrÃ©er un compte
+                Créer un compte
               </button>
             </p>
           </form>
@@ -172,7 +172,7 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
         >
           <h2 className="anim" style={step(0)}>BIENVENUE !</h2>
           <p className="anim" style={step(1)}>
-            Nous sommes ravis de vous accueillir. CrÃ©ez votre compte pour trouver votre prochain emploi.
+            Nous sommes ravis de vous accueillir. Créez votre compte pour trouver votre prochain emploi.
           </p>
         </section>
       </div>
@@ -181,11 +181,11 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
       <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         <a href="/conditions" className="hover:text-primary hover:underline transition-colors">Conditions d'utilisation</a>
         <span className="text-muted-foreground/40">Â·</span>
-        <a href="/confidentialite" className="hover:text-primary hover:underline transition-colors">Politique de confidentialitÃ©</a>
+        <a href="/confidentialite" className="hover:text-primary hover:underline transition-colors">Politique de confidentialité</a>
         <span className="text-muted-foreground/40">Â·</span>
         <a href="/confidentialite" className="hover:text-primary hover:underline transition-colors">Politique relative aux cookies</a>
         <span className="text-muted-foreground/40">Â·</span>
-        <a href="/conditions" className="hover:text-primary hover:underline transition-colors">Directives de la communautÃ©</a>
+        <a href="/conditions" className="hover:text-primary hover:underline transition-colors">Directives de la communauté</a>
         <span className="text-muted-foreground/40">Â·</span>
         <a href="/conditions" className="hover:text-primary hover:underline transition-colors">Politique de copyright</a>
         <span className="text-muted-foreground/40">Â·</span>
@@ -194,7 +194,7 @@ export default function AuthAnimated({ onLogin, onRegister, error }: AuthAnimate
       <div className="flex justify-center items-center gap-2">
         <Globe className="h-3 w-3" />
         <select value={lang} onChange={(e) => setLang(e.target.value as "fr" | "en")} className="rounded-md border border-input bg-background px-2 py-1 text-xs">
-          <option value="fr">FranÃ§ais</option>
+          <option value="fr">Français</option>
           <option value="en">English</option>
         </select>
       </div>
