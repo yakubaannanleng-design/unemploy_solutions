@@ -6,4 +6,4 @@
  * UTILISÉ PAR     : app (route /notifications).
  */
 export { default as NotificationsView } from "./components/NotificationsView";
-export { default } from "./components/NotificationsView";
+export { default } from "./components/NotificationsView";export { useNotifications } from "./hooks/useNotifications";

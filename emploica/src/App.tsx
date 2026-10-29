@@ -21,9 +21,9 @@ const FlashOffersView = lazy(() => import("features/jobs").then((m) => ({ defaul
 const SettingsView = lazy(() => import("features/settings"));
 const FavoritesView = lazy(() => import("features/favorites"));
 const SearchView = lazy(() => import("features/search"));
-const TermsView = lazy(() => import("./components/views/TermsView"));
-const PrivacyView = lazy(() => import("./components/views/PrivacyView"));
-const LicensesView = lazy(() => import("./components/views/LicensesView"));
+const TermsView = lazy(() => import("features/legal").then((m) => ({ default: m.TermsView })));
+const PrivacyView = lazy(() => import("features/legal").then((m) => ({ default: m.PrivacyView })));
+const LicensesView = lazy(() => import("features/legal").then((m) => ({ default: m.LicensesView })));
 import type { User, Offer, Rating } from "./types";
 import { DEMO_USERS } from "./data/mockData";
 const AuthPage = lazy(() => import("features/auth"));

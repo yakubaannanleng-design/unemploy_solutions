@@ -5,4 +5,4 @@
  * DÉPEND DE       : aucun.
  * UTILISÉ PAR     : features/jobs/*.
  */
-export {};
+export type { Offer } from "@/types";

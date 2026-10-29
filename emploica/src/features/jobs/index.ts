@@ -10,3 +10,4 @@ export { default as OfferDetailModal } from "./components/OfferDetailModal";
 export { default as OfferForm } from "./components/OfferForm";
 export { default as OffersView } from "./components/OffersView";
 export { default as FlashOffersView } from "./components/FlashOffersView";
+export { useOffers } from "./hooks/useOffers";

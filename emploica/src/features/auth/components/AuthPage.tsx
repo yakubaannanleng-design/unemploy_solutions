@@ -1,6 +1,6 @@
 ﻿// Page d'authentification de Workca (animée) — intégrée avec Supabase Auth.
 import { useState } from "react";
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers } from "../hooks/useUsers";
 import type { User } from "@/types";
 import AuthAnimated from "./AuthAnimated";
 import { useLang } from "lib/i18n";

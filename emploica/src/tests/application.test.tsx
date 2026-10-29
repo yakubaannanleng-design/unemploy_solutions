@@ -10,7 +10,7 @@ vi.mock("../lib/supabase", () => ({
   supabase: null,
 }));
 
-vi.mock("../hooks/useOffers", () => ({
+vi.mock("../features/jobs/hooks/useOffers", () => ({
   useOffers: () => ({
     data: [
       {

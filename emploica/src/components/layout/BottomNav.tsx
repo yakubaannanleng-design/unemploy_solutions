@@ -1,10 +1,16 @@
-// Barre de navigation inférieure (style WhatsApp) avec menu "Plus" (3 points).
+/**
+ * PROBLÈME RÉSOLU : barre de navigation inférieure (mobile).
+ * RESPONSABILITÉ  : navigation mobile, menu "Plus".
+ * NE FAIT PAS     : ne gère pas la session Supabase.
+ * DÉPEND DE       : lib/i18n, lib/store, components/ui/*.
+ * UTILISÉ PAR     : App.tsx.
+ */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useLang, t } from "../../lib/i18n";
-import { useStore } from "../../lib/store";
-import { Button } from "../ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { useLang, t } from "lib/i18n";
+import { useStore } from "lib/store";
+import { Button } from "components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "components/ui/sheet";
 import { Home, Briefcase, MessageSquare, User, MoreVertical, Settings, Heart, Bell, Zap, Shield, PlusCircle, LogOut, Search } from "lucide-react";
 
 interface BottomNavProps {

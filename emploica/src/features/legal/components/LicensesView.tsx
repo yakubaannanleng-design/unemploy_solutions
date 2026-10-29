@@ -1,5 +1,11 @@
-// Page des licences open source.
-import { useLang } from "../../lib/i18n";
+/**
+ * PROBLÈME RÉSOLU : page des licences open source.
+ * RESPONSABILITÉ  : rendu de la page Licences.
+ * NE FAIT PAS     : ne parle pas à Supabase.
+ * DÉPEND DE       : lib/i18n.
+ * UTILISÉ PAR     : app (route /licences).
+ */
+import { useLang } from "lib/i18n";
 
 export default function LicensesView() {
   const { lang } = useLang();

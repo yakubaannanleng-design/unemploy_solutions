@@ -2,8 +2,8 @@
 // Affiche la liste des candidatures envoyées avec leur statut et la date.
 import { useLang, t } from "lib/i18n";
 import { useUserApplications } from "../hooks/useApplications";
-import { useOffers } from "@/hooks/useOffers";
-import { useUsers } from "@/hooks/useUsers";
+import { useOffers } from "features/jobs";
+import { useUsers } from "features/auth";
 import { Card, CardContent } from "components/ui/card";
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";

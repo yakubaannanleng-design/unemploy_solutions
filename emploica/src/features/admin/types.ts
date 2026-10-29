@@ -5,4 +5,4 @@
  * DÉPEND DE       : aucun.
  * UTILISÉ PAR     : features/admin/*.
  */
-export {};
+export type { Signalement } from "@/types";

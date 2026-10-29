@@ -1,5 +1,10 @@
-// Logo de l'application Workca.
-// Affiche l'icône "w" dans un cercle coloré, avec le nom "workca" en option.
+/**
+ * PROBLÈME RÉSOLU : logo de l'application Workca.
+ * RESPONSABILITÉ  : affichage du logo.
+ * NE FAIT PAS     : aucune logique métier.
+ * DÉPEND DE       : aucun.
+ * UTILISÉ PAR     : Header, LoginView.
+ */
 export default function Logo({ className = "", showText = true }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>

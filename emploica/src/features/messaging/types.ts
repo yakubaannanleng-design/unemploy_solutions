@@ -5,4 +5,4 @@
  * DÉPEND DE       : aucun.
  * UTILISÉ PAR     : features/messaging/*.
  */
-export {};
+export type { Conversation, Message } from "@/types";

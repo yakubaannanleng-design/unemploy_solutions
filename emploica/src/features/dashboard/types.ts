@@ -5,4 +5,4 @@
  * DÉPEND DE       : aucun.
  * UTILISÉ PAR     : features/dashboard/*.
  */
-export {};
+export type { Transaction } from "@/types";

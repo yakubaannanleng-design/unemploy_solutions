@@ -1,6 +1,13 @@
-﻿import { useLang, t } from "../../lib/i18n";
-import { CATEGORIES } from "../../data/categories";
-import { getIcon } from "../../lib/iconMap";
+﻿/**
+ * PROBLÈME RÉSOLU : grille de sélection de catégories.
+ * RESPONSABILITÉ  : affichage et sélection de catégories.
+ * NE FAIT PAS     : ne parle pas à Supabase.
+ * DÉPEND DE       : lib/i18n, @/data/categories, lib/iconMap.
+ * UTILISÉ PAR     : features/jobs, features/search.
+ */
+import { useLang, t } from "lib/i18n";
+import { CATEGORIES } from "@/data/categories";
+import { getIcon } from "lib/iconMap";
 
 const iconColors: Record<string, string> = {
   informatique: "text-blue-500",

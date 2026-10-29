@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../lib/supabase";
+import { supabase } from "@/lib/supabase";
 import type { Notification } from "../types";
 
 export function useNotifications(userId: string | null) {

@@ -1,5 +1,11 @@
-// Page de politique de confidentialité.
-import { useLang } from "../../lib/i18n";
+/**
+ * PROBLÈME RÉSOLU : page de politique de confidentialité.
+ * RESPONSABILITÉ  : rendu de la page Confidentialité.
+ * NE FAIT PAS     : ne parle pas à Supabase.
+ * DÉPEND DE       : lib/i18n.
+ * UTILISÉ PAR     : app (route /confidentialite).
+ */
+import { useLang } from "lib/i18n";
 
 export default function PrivacyView() {
   const { lang } = useLang();

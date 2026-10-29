@@ -5,4 +5,4 @@
  * DÉPEND DE       : aucun.
  * UTILISÉ PAR     : features/notifications/*.
  */
-export {};
+export type { Notification } from "@/types";

@@ -1,5 +1,11 @@
-// Page des conditions d'utilisation.
-import { useLang, t } from "../../lib/i18n";
+/**
+ * PROBLÈME RÉSOLU : page des conditions d'utilisation.
+ * RESPONSABILITÉ  : rendu de la page Conditions.
+ * NE FAIT PAS     : ne parle pas à Supabase.
+ * DÉPEND DE       : lib/i18n.
+ * UTILISÉ PAR     : app (route /conditions).
+ */
+import { useLang, t } from "lib/i18n";
 
 export default function TermsView() {
   const { lang } = useLang();

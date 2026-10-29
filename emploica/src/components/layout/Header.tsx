@@ -1,10 +1,16 @@
-﻿// En-tête de navigation de l'application Workca.
+/**
+ * PROBLÈME RÉSOLU : en-tête de navigation de l'application Workca.
+ * RESPONSABILITÉ  : barre de navigation, menu mobile, bascule de mode (switchMode).
+ * NE FAIT PAS     : ne gère pas la session Supabase.
+ * DÉPEND DE       : lib/i18n, lib/store, components/ui/*, components/layout/Logo, @/types.
+ * UTILISÉ PAR     : App.tsx.
+ */
 import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart, Search } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useLang, t } from "../../lib/i18n";
-import Logo from "./Logo";
-import { Button } from "../ui/button";
+import { useLang, t } from "lib/i18n";
+import Logo from "components/layout/Logo";
+import { Button } from "components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +18,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { useStore } from "../../lib/store";
-import type { User as UserType } from "../../types";
+} from "components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "components/ui/sheet";
+import { useStore } from "lib/store";
+import type { User as UserType } from "@/types";
 
 interface HeaderProps {
   currentUser: UserType | null;

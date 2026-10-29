@@ -8,7 +8,7 @@ vi.mock("../lib/supabase", () => ({
   supabase: null,
 }));
 
-vi.mock("../hooks/useUsers", () => ({
+vi.mock("../features/auth/hooks/useUsers", () => ({
   useUsers: () => ({ data: [], isLoading: false }),
 }));
 

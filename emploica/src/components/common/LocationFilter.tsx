@@ -1,13 +1,20 @@
+/**
+ * PROBLÈME RÉSOLU : filtre de localisation (région/ville/quartier).
+ * RESPONSABILITÉ  : sélection de région, ville et quartier.
+ * NE FAIT PAS     : ne parle pas à Supabase.
+ * DÉPEND DE       : lib/i18n, @/data/locations, components/ui/select.
+ * UTILISÉ PAR     : features/jobs, features/search.
+ */
 import { MapPin } from "lucide-react";
-import { regions, cities, quartiers } from "../../data/locations";
-import { useLang, t } from "../../lib/i18n";
+import { regions, cities, quartiers } from "@/data/locations";
+import { useLang, t } from "lib/i18n";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "components/ui/select";
 
 interface LocationFilterProps {
   region: string;

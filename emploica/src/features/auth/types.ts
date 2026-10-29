@@ -5,4 +5,4 @@
  * DÉPEND DE       : aucun.
  * UTILISÉ PAR     : features/auth/*.
  */
-export {};
+export type { User } from "@/types";
