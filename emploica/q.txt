@@ -1,0 +1,50 @@
+﻿
+> workca@0.0.0 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 115 modules transformed.
+node.exe : [31mx[39m Build failed in 1.83s
+Au caractère Ligne:1 : 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([31mx[39m Build failed in 1.83s:String) [], RemoteExcept 
+   ion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31merror during build:
+[31m[vite:esbuild] Transform failed with 2 errors:
+F:/Mes_Projets/unemploy_solutions/emploica/src/components/auth/AuthAnimated.tsx:212:0: ERROR: The 
+character "}" is not valid inside a JSX element
+F:/Mes_Projets/unemploy_solutions/emploica/src/components/auth/AuthAnimated.tsx:213:0: ERROR: 
+Unexpected end of file before a closing "div" tag[31m
+file: [36mF:/Mes_Projets/unemploy_solutions/emploica/src/components/auth/AuthAnimated.tsx:212:0[31m
+[33m
+[33mThe character "}" is not valid inside a JSX element[33m
+210|      </div>
+211|    );
+212|  }
+   |  ^
+213|  
+
+[33mUnexpected end of file before a closing "div" tag[33m
+211|    );
+212|  }
+213|  
+   |  ^
+[31m
+    at failureErrorWithLog 
+(F:\Mes_Projets\unemploy_solutions\emploica\node_modules\esbuild\lib\main.js:1472:15)
+    at F:\Mes_Projets\unemploy_solutions\emploica\node_modules\esbuild\lib\main.js:755:50
+    at responseCallbacks.<computed> 
+(F:\Mes_Projets\unemploy_solutions\emploica\node_modules\esbuild\lib\main.js:622:9)
+    at handleIncomingPacket 
+(F:\Mes_Projets\unemploy_solutions\emploica\node_modules\esbuild\lib\main.js:677:12)
+    at Socket.readFromStdout 
+(F:\Mes_Projets\unemploy_solutions\emploica\node_modules\esbuild\lib\main.js:600:7)
+    at Socket.emit (node:events:514:20)
+    at addChunk (node:internal/streams/readable:568:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:519:3)
+    at Readable.push (node:internal/streams/readable:399:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m

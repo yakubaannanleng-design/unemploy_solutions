@@ -10,6 +10,8 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
 import { StoreProvider } from "./lib/store";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 import AppErrorBoundary from "./components/layout/AppErrorBoundary";
 
 // Applique le thème sauvegardé avant le rendu.
@@ -25,9 +27,11 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AppErrorBoundary>
       <BrowserRouter>
-        <StoreProvider>
-          <App />
-        </StoreProvider>
+        <QueryClientProvider client={queryClient}>
+          <StoreProvider>
+            <App />
+          </StoreProvider>
+        </QueryClientProvider>
       </BrowserRouter>
     </AppErrorBoundary>
   </StrictMode>,

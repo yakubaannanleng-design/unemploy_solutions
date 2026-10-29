@@ -1,6 +1,6 @@
-// Page d'authentification de Workca (animée) — intégrée avec Supabase Auth.
+﻿// Page d'authentification de Workca (animée) — intégrée avec Supabase Auth.
 import { useState } from "react";
-import { useStore } from "../lib/store";
+import { useUsers } from "../hooks/useUsers";
 import type { User } from "../types";
 import AuthAnimated from "../components/auth/AuthAnimated";
 import { useLang } from "../lib/i18n";
@@ -12,14 +12,14 @@ interface AuthPageProps {
 
 export default function AuthPage({ onLogin }: AuthPageProps = {}) {
   const { lang } = useLang();
-  const { state, patch } = useStore();
+  const { data: users = [] } = useUsers();
   const [error, setError] = useState("");
 
   const handleLogin = async (values: { username: string; password: string }) => {
-    // Résoudre l'email à utiliser pour Supabase Auth
+    // Resoudre l'email a utiliser pour Supabase Auth
     let emailToTry = values.username;
     if (!values.username.includes("@")) {
-      const candidate = state.users.find(
+      const candidate = users.find(
         (x) =>
           x.name === values.username ||
           x.phone === values.username ||
@@ -37,7 +37,7 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
           password: values.password,
         });
         if (!authError && data.user) {
-          let u = state.users.find((x) => x.email === emailToTry || x.id === data.user.id);
+          let u = users.find((x) => x.email === emailToTry || x.id === data.user.id);
           if (!u) {
             u = {
               id: data.user.id,
@@ -45,12 +45,11 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
               name: data.user.user_metadata?.name ?? emailToTry.split("@")[0],
               phone: data.user.user_metadata?.phone ?? "",
               email: emailToTry,
-              passwordHash: values.password,
+              passwordHash: "",
               status: "actif",
               verification: "déclaré",
               createdAt: new Date().toISOString(),
             };
-            patch("users", u);
 
           setError("");
           onLogin?.(u);
@@ -58,13 +57,13 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
         }
         }
         if (authError) supabaseError = authError.message;
-      } catch (e: any) {
-        supabaseError = e?.message ?? null;
+      } catch (e: Error) {
+        supabaseError = e.message ?? null;
       }
     }
 
     // 2) Fallback : comptes démo / locaux
-    const u = state.users.find(
+    const u = users.find(
       (x) =>
         (x.phone === values.username ||
           x.email === values.username ||
@@ -110,25 +109,11 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
           name: username,
           phone: username.startsWith("+") ? username : "+237 " + username,
           email,
-          passwordHash: values.password,
+          passwordHash: "",
           status: "actif",
           verification: "déclaré",
           createdAt: new Date().toISOString(),
         };
-        patch("users", newUser);
-        patch("seekers", {
-          userId: newUser.id,
-          bio: "",
-          skills: [],
-          categories: [],
-          contractWanted: [],
-          availability: "immédiatement",
-          zone: { region: "Centre", city: "Yaoundé", quartier: "" },
-          radiusKm: 10,
-          experience: "",
-          languages: ["français"],
-          missionsDone: 0,
-        } as any);
         setError("");
         onLogin?.(newUser);
         return;
@@ -146,36 +131,11 @@ export default function AuthPage({ onLogin }: AuthPageProps = {}) {
       name: username,
       phone: username.startsWith("+") ? username : "+237 " + username,
       email: values.email || undefined,
-      passwordHash: password,
+      passwordHash: "",
       status: "actif",
       verification: "déclaré",
       createdAt: new Date().toISOString(),
     };
-    patch("users", newUser);
-    if ((values.role ?? "chercheur") === "employeur") {
-      patch("employers", {
-        userId: newUser.id,
-        orgName: username,
-        description: "",
-        orgType: "entreprise",
-        verification: "déclaré",
-        verificationRequested: false,
-      } as any);
-    } else {
-      patch("seekers", {
-        userId: newUser.id,
-        bio: "",
-        skills: [],
-        categories: [],
-        contractWanted: [],
-        availability: "immédiatement",
-        zone: { region: "Centre", city: "Yaoundé", quartier: "" },
-        radiusKm: 10,
-        experience: "",
-        languages: ["français"],
-        missionsDone: 0,
-      } as any);
-    }
     setError("");
     onLogin?.(newUser);
   };
