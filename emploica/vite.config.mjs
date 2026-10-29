@@ -9,7 +9,12 @@ dns.setDefaultResultOrder("verbatim");
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: { "@": path.resolve(__dirname, "./src") },
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "features": path.resolve(__dirname, "./src/features"),
+      "lib": path.resolve(__dirname, "./src/lib"),
+      "components": path.resolve(__dirname, "./src/components"),
+    },
     dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {

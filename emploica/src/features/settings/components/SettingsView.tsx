@@ -1,15 +1,22 @@
-﻿// Vue des parametres utilisateur : apparence, compte, securite, notifications, confidentialite, a propos.
+/**
+ * PROBLÈME RÉSOLU : affiche et gère la page des paramètres utilisateur (apparence, compte, sécurité, notifications, confidentialité, à propos).
+ * RESPONSABILITÉ  : rendu de l'écran Paramètres et interactions locales (thème, préférences, mise à jour du compte dans le store).
+ * NE FAIT PAS     : ne parle pas directement à Supabase ; ne gère pas l'authentification ni les autres domaines.
+ * DÉPEND DE       : lib/i18n, lib/store, components/ui/*, react-router-dom.
+ * UTILISÉ PAR     : app (route /parametres).
+ */
+// Vue des parametres utilisateur : apparence, compte, securite, notifications, confidentialite, a propos.
 import { useState, useEffect } from "react";
 import { Moon, Sun, Globe, LogOut, Settings as SettingsIcon, Shield, User, Phone, Mail, Bell, Info, FileText, Lock } from "lucide-react";
-import { useLang, t } from "../../lib/i18n";
-import { useStore } from "../../lib/store";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Switch } from "../ui/switch";
-import { Separator } from "../ui/separator";
-import { Input } from "../ui/input";
+import { useLang, t } from "lib/i18n";
+import { useStore } from "lib/store";
+import { Button } from "components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Switch } from "components/ui/switch";
+import { Separator } from "components/ui/separator";
+import { Input } from "components/ui/input";
 import { Link } from "react-router-dom";
-import { Label } from "../ui/label";
+import { Label } from "components/ui/label";
 
 export default function SettingsView() {
   const { lang, setLang } = useLang();
