@@ -14,7 +14,7 @@ const EmployerHome = lazy(() => import("./components/home/EmployerHome"));
 const AdminPanel = lazy(() => import("./components/home/AdminPanel"));
 const OffersView = lazy(() => import("features/jobs").then((m) => ({ default: m.OffersView })));
 const MessagesView = lazy(() => import("features/messaging"));
-const ProfileView = lazy(() => import("./components/views/ProfileView"));
+const ProfileView = lazy(() => import("features/seekers"));
 const OfferForm = lazy(() => import("features/jobs").then((m) => ({ default: m.OfferForm })));
 const NotificationsView = lazy(() => import("features/notifications"));
 const FlashOffersView = lazy(() => import("features/jobs").then((m) => ({ default: m.FlashOffersView })));

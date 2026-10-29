@@ -1,18 +1,26 @@
-﻿import { useState } from "react";
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
+﻿/**
+ * PROBLÈME RÉSOLU : affiche et gère le profil de l'utilisateur connecté (chercheur ou employeur), avec upload photo/CV pour les chercheurs.
+ * RESPONSABILITÉ  : rendu de l'écran Profil, affichage des données, upload Supabase Storage (photo/CV), formations recommandées.
+ * NE FAIT PAS     : ne gère pas l'édition détaillée du profil chercheur (délégué à ProfileEditor) ; ne parle pas à Supabase pour les données profil (store).
+ * DÉPEND DE       : lib/store, lib/i18n, lib/supabase, data/categories, data/trainings, components/ui/*, features/seekers/components/ProfileEditor.
+ * UTILISÉ PAR     : app (route /profil).
+ * NOTE            : composant MIXTE (chercheur + employeur) — À SCINDER PLUS TARD : la branche employeur devra migrer vers features/employers.
+ */
+import { useState } from "react";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
 import { Link } from "react-router-dom";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "../ui/separator";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Separator } from "components/ui/separator";
 import { User, Building2, ShieldCheck, MapPin, Briefcase, Star, BookOpen } from "lucide-react";
-import { categoryById } from "../../data/categories";
+import { categoryById } from "@/data/categories";
 import ProfileEditor from "./ProfileEditor";
 import { toast } from "sonner";
-import { Progress } from "../ui/progress";
-import { supabase } from "../../lib/supabase";
-import { TRAININGS } from "../../data/trainings";
+import { Progress } from "components/ui/progress";
+import { supabase } from "lib/supabase";
+import { TRAININGS } from "@/data/trainings";
 
 export default function ProfileView() {
   const { lang } = useLang();

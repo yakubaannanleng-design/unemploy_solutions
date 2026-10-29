@@ -1,13 +1,20 @@
+/**
+ * PROBLÈME RÉSOLU : formulaire d'édition du profil chercheur d'emploi.
+ * RESPONSABILITÉ  : rendu du formulaire et construction d'un SeekerProfile, puis appel du callback onSave.
+ * NE FAIT PAS     : ne parle pas à Supabase ; ne gère pas l'affichage du profil (délégué à ProfileView).
+ * DÉPEND DE       : lib/store, lib/i18n, components/ui/*, types/SeekerProfile (src/types.ts, conservé pour éviter les boucles d'imports).
+ * UTILISÉ PAR     : features/seekers (ProfileView).
+ */
 import { useState } from "react";
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "../ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import type { SeekerProfile } from "../../types";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
+import { Input } from "components/ui/input";
+import { Button } from "components/ui/button";
+import { Badge } from "components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Separator } from "components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "components/ui/select";
+import type { SeekerProfile } from "../types";
 
 interface ProfileEditorProps {
   userId: string;
