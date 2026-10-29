@@ -1,13 +1,13 @@
 // Composant de l interface utilisateur
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "../ui/separator";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Separator } from "components/ui/separator";
 import { Link } from "react-router-dom";
 import { User, Building2, ShieldCheck, MessageSquare } from "lucide-react";
-import { categoryById } from "../../data/categories";
+import { categoryById } from "@/data/categories";
 
 export default function AdminPanel() {
   const { lang } = useLang();

@@ -11,7 +11,7 @@ import Header from "./components/layout/Header";
 import BottomNav from "./components/layout/BottomNav";
 const SeekerHome = lazy(() => import("./components/home/SeekerHome"));
 const EmployerHome = lazy(() => import("./components/home/EmployerHome"));
-const AdminPanel = lazy(() => import("./components/home/AdminPanel"));
+const AdminPanel = lazy(() => import("features/admin"));
 const OffersView = lazy(() => import("features/jobs").then((m) => ({ default: m.OffersView })));
 const MessagesView = lazy(() => import("features/messaging"));
 const ProfileView = lazy(() => import("features/seekers"));

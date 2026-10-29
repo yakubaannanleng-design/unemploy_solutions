@@ -19,7 +19,7 @@ Suivi de la restructuration par domaines.
 - [x] seekers — commit `d70b16e` (+ corrections `26438fa`, `037ae16`, `9abe3e1`)
 - [ ] employers (structure seule)
 - [x] applications
-- [ ] admin
+- [x] admin
 - [ ] dashboard
 - [ ] auth
 - [ ] layout / common / pages légales
