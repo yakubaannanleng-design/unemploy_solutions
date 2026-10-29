@@ -1,11 +1,18 @@
+/**
+ * PROBLÈME RÉSOLU : affiche les offres favorites de l'utilisateur connecté et permet de les retirer.
+ * RESPONSABILITÉ  : rendu de l'écran Favoris et bascule d'un favori dans le store.
+ * NE FAIT PAS     : ne parle pas à Supabase ; ne gère pas la création d'offres.
+ * DÉPEND DE       : lib/store, lib/i18n, components/offers/OfferCard, components/offers/OfferDetailModal (à migrer vers features/jobs), types/Offer.
+ * UTILISÉ PAR     : app (route /favoris).
+ */
 // Vue des offres favorites de l'utilisateur connecté.
 import { useState } from "react";
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
 import { Heart } from "lucide-react";
-import OfferCard from "../offers/OfferCard";
-import OfferDetailModal from "../offers/OfferDetailModal";
-import type { Offer } from "../../types";
+import OfferCard from "components/offers/OfferCard";
+import OfferDetailModal from "components/offers/OfferDetailModal";
+import type { Offer } from "@/types";
 
 export default function FavoritesView() {
   const { lang } = useLang();

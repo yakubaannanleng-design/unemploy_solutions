@@ -19,7 +19,7 @@ const OfferForm = lazy(() => import("./components/offers/OfferForm"));
 const NotificationsView = lazy(() => import("./components/views/NotificationsView"));
 const FlashOffersView = lazy(() => import("./components/home/FlashOffersView"));
 const SettingsView = lazy(() => import("features/settings"));
-const FavoritesView = lazy(() => import("./components/views/FavoritesView"));
+const FavoritesView = lazy(() => import("features/favorites"));
 const SearchView = lazy(() => import("features/search"));
 const TermsView = lazy(() => import("./components/views/TermsView"));
 const PrivacyView = lazy(() => import("./components/views/PrivacyView"));
