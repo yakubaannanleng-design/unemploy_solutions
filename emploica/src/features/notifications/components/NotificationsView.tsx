@@ -1,9 +1,16 @@
+/**
+ * PROBLÈME RÉSOLU : affiche les notifications de l'utilisateur connecté et permet de les marquer comme lues.
+ * RESPONSABILITÉ  : rendu de l'écran Notifications, filtrage par utilisateur et mise à jour du statut de lecture dans le store.
+ * NE FAIT PAS     : ne parle pas directement à Supabase ; ne crée pas de notifications.
+ * DÉPEND DE       : lib/store, lib/i18n, components/ui/*.
+ * UTILISÉ PAR     : app (route /notifications).
+ */
 import { Bell, CheckCheck } from "lucide-react";
-import { useLang, t } from "../../lib/i18n";
-import { useStore } from "../../lib/store";
-import { Button } from "../ui/button";
-import { ScrollArea } from "../ui/scroll-area";
-import { Separator } from "../ui/separator";
+import { useLang, t } from "lib/i18n";
+import { useStore } from "lib/store";
+import { Button } from "components/ui/button";
+import { ScrollArea } from "components/ui/scroll-area";
+import { Separator } from "components/ui/separator";
 
 export default function NotificationsView() {
   const { lang } = useLang();
