@@ -13,7 +13,7 @@ const SeekerHome = lazy(() => import("./components/home/SeekerHome"));
 const EmployerHome = lazy(() => import("./components/home/EmployerHome"));
 const AdminPanel = lazy(() => import("./components/home/AdminPanel"));
 const OffersView = lazy(() => import("./components/views/OffersView"));
-const MessagesView = lazy(() => import("./components/views/MessagesView"));
+const MessagesView = lazy(() => import("features/messaging"));
 const ProfileView = lazy(() => import("./components/views/ProfileView"));
 const OfferForm = lazy(() => import("./components/offers/OfferForm"));
 const NotificationsView = lazy(() => import("features/notifications"));

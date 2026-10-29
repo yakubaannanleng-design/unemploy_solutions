@@ -1,13 +1,20 @@
+/**
+ * PROBLÈME RÉSOLU : affiche le fil de discussion d'une conversation et permet d'envoyer un message.
+ * RESPONSABILITÉ  : rendu du thread, marquage des messages comme lus (store), envoi de message (store + Supabase insert message/conversation).
+ * NE FAIT PAS     : ne liste pas les conversations (délégué à MessagesView).
+ * DÉPEND DE       : lib/store, lib/supabase, lib/i18n, components/ui/*, types/Message.
+ * UTILISÉ PAR     : features/messaging/components/MessagesView.
+ */
 import { useState, useEffect } from "react";
-import { useStore } from "../../lib/store";
-import { supabase } from "../../lib/supabase";
-import { useLang, t } from "../../lib/i18n";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { ScrollArea } from "../ui/scroll-area";
-import { Separator } from "../ui/separator";
-import type { Message } from "../../types";
+import { useStore } from "lib/store";
+import { supabase } from "lib/supabase";
+import { useLang, t } from "lib/i18n";
+import { Input } from "components/ui/input";
+import { Button } from "components/ui/button";
+import { Badge } from "components/ui/badge";
+import { ScrollArea } from "components/ui/scroll-area";
+import { Separator } from "components/ui/separator";
+import type { Message } from "@/types";
 
 interface MessagingProps {
   conversationId: string | null;

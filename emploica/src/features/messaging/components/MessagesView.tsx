@@ -1,11 +1,18 @@
+/**
+ * PROBLÈME RÉSOLU : affiche la liste des conversations et permet de sélectionner un fil de discussion.
+ * RESPONSABILITÉ  : rendu de l'écran Messages (liste + zone de chat) et navigation entre conversations.
+ * NE FAIT PAS     : ne parle pas directement à Supabase ; ne gère pas l'envoi de message (délégué à Messaging).
+ * DÉPEND DE       : lib/store, lib/i18n, components/ui/*, features/messaging/components/Messaging.
+ * UTILISÉ PAR     : app (route /messages).
+ */
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useStore } from "../../lib/store";
-import { useLang, t } from "../../lib/i18n";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Separator } from "../ui/separator";
+import { useStore } from "lib/store";
+import { useLang, t } from "lib/i18n";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import { Card, CardContent } from "components/ui/card";
+import { Separator } from "components/ui/separator";
 import Messaging from "./Messaging";
 import { MessageSquare } from "lucide-react";
 
