@@ -52,7 +52,7 @@ export default function OfferCard({ offer, onClick, onApply, alreadyApplied, isF
             <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
           </button>
         )}
-        {(offer as any).verification === "vérifié" && (
+        {(offer as any).verification === "vérifié" && ( // TODO: type Offer sans champ verification
           <Badge variant="secondary" className="text-xs">{t("verifiedEmployer", lang)}</Badge>
         )}
       </div>

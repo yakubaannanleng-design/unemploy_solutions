@@ -1,13 +1,13 @@
 // Page de suivi des candidatures pour le chercheur d'emploi.
 // Affiche la liste des candidatures envoyées avec leur statut et la date.
-import { useLang, t } from "../../lib/i18n";
-import { useUserApplications } from "../../hooks/useApplications";
-import { useOffers } from "../../hooks/useOffers";
-import { useUsers } from "../../hooks/useUsers";
-import { Card, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import type { User as UserType } from "../../types";
+import { useLang, t } from "lib/i18n";
+import { useUserApplications } from "../hooks/useApplications";
+import { useOffers } from "@/hooks/useOffers";
+import { useUsers } from "@/hooks/useUsers";
+import { Card, CardContent } from "components/ui/card";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import type { User as UserType } from "@/types";
 
 interface SeekerApplicationsViewProps {
   currentUser: UserType | null;
