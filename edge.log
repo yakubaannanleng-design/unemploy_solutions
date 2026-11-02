@@ -1,0 +1,13 @@
+﻿msedge.exe : [19352:19448:1027/173024.635:ERROR:chrome\elevation_service\edge_elevation_service_browse
+r_helper.cc:94] LaunchUpdateCmdElevatedAndWait:  hr = 80070002 with exit code: 32
+Au caractère Ligne:1 : 1
++ & 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' --he ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([19352:19448:10...h exit code: 32:String) [], RemoteExce 
+   ption
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[19352:19320:1027/173035.769:ERROR:chrome\browser\task_manager\providers\fallback_task_provider.cc:126
+] Every renderer should have at least one task provided by a primary task provider. If a "Renderer" 
+fallback task is shown, it is a bug. If you have repro steps, please file a new bug and tag it as a 
+dependency of crbug.com/40528867.

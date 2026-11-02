@@ -10,7 +10,7 @@ Suivi de la restructuration par domaines.
 
 ## Domaines
 - [x] settings — commit `91c32e2`
-- [x] search — commit `a8b54d6`
+- [x] search — commit `a8b54d6` 
 - [x] favorites — commit `eecf187`
 - [x] notifications — commit `f25f38c`
 - [x] messaging — commit `ff2372c`

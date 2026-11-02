@@ -1,7 +1,7 @@
 ﻿// Composant principal de l'application Workca.
 // Gestion de la navigation, de l'authentification et du routage entre les pages.
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Suspense, useEffect, useState } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./lib/store";
 import { Skeleton } from "./components/ui/skeleton";
 import { Toaster } from "./components/ui/sonner";
@@ -9,54 +9,11 @@ import { useLang, t } from "./lib/i18n";
 import { supabase } from "./lib/supabase";
 import Header from "./components/layout/Header";
 import BottomNav from "./components/layout/BottomNav";
-const SeekerHome = lazy(() => import("features/dashboard").then((m) => ({ default: m.SeekerHome })));
-const EmployerHome = lazy(() => import("features/dashboard").then((m) => ({ default: m.EmployerHome })));
-const AdminPanel = lazy(() => import("features/admin"));
-const OffersView = lazy(() => import("features/jobs").then((m) => ({ default: m.OffersView })));
-const MessagesView = lazy(() => import("features/messaging"));
-const ProfileView = lazy(() => import("features/seekers"));
-const OfferForm = lazy(() => import("features/jobs").then((m) => ({ default: m.OfferForm })));
-const NotificationsView = lazy(() => import("features/notifications"));
-const FlashOffersView = lazy(() => import("features/jobs").then((m) => ({ default: m.FlashOffersView })));
-const SettingsView = lazy(() => import("features/settings"));
-const FavoritesView = lazy(() => import("features/favorites"));
-const SearchView = lazy(() => import("features/search"));
-const TermsView = lazy(() => import("features/legal").then((m) => ({ default: m.TermsView })));
-const PrivacyView = lazy(() => import("features/legal").then((m) => ({ default: m.PrivacyView })));
-const LicensesView = lazy(() => import("features/legal").then((m) => ({ default: m.LicensesView })));
+import AppRoutes from "./app/routes";
 import type { User, Offer, Rating } from "./types";
 import { DEMO_USERS } from "./data/mockData";
-const AuthPage = lazy(() => import("features/auth"));
 
 // Liste des routes qui nécessitent d'être connecté.
-const PROTECTED_ROUTES = [
-  "/chercheur",
-  "/employeur",
-  "/admin",
-  "/offres",
-  "/offres/nouveau",
-  "/messages",
-  "/profil",
-  "/notifications",
-  "/boulots-eclair",
-  "/parametres",
-  "/favoris",
-];
-
-// Wrapper qui protège une route : redirige vers /login si l'utilisateur n'est pas connecté.
-function RequireAuth({ children }: { children: JSX.Element }) {
-  const isAuthed = window.localStorage.getItem("workca:me") !== null;
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  if (!isAuthed) {
-    navigate("/login", { state: { from: location }, replace: true });
-    return null;
-  }
-
-  return children;
-}
-
 export default function App() {
   const { lang } = useLang();
   const { state, patch, replace, update, setCurrentUser, currentUser } = useStore();
@@ -312,103 +269,7 @@ export default function App() {
       />
       <main id="main-content" className="container px-4 py-6">
         <Suspense fallback={<div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-32 w-full" /><Skeleton className="h-32 w-full" /></div>}>
-        <Routes>
-          <Route path="/login" element={<AuthPage onLogin={login} />} />
-          <Route
-            path="/chercheur"
-            element={
-              <RequireAuth>
-                <SeekerHome />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/employeur"
-            element={
-              <RequireAuth>
-                <EmployerHome />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <RequireAuth>
-                <AdminPanel />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/offres"
-            element={
-              <RequireAuth>
-                <OffersView />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/offres/nouveau"
-            element={
-              <RequireAuth>
-                <OfferForm onSubmit={createOffer} onCancel={() => navigate(-1)} />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/messages"
-            element={
-              <RequireAuth>
-                <MessagesView />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/profil"
-            element={
-              <RequireAuth>
-                <ProfileView />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/notifications"
-            element={
-              <RequireAuth>
-                <NotificationsView />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/boulots-eclair"
-            element={
-              <RequireAuth>
-                <FlashOffersView />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/parametres"
-            element={
-              <RequireAuth>
-                <SettingsView />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/favoris"
-            element={
-              <RequireAuth>
-                <FavoritesView />
-              </RequireAuth>
-            }
-          />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/recherche" element={<SearchView />} />
-          <Route path="/conditions" element={<TermsView />} />
-          <Route path="/confidentialite" element={<PrivacyView />} />
-          <Route path="/licences" element={<LicensesView />} />
-          <Route path="*" element={<AuthPage onLogin={login} />} />
-        </Routes>
+          <AppRoutes onLogin={login} onSubmitOffer={createOffer} />
         </Suspense>
       </main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
