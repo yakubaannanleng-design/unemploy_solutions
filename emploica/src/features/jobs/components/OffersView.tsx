@@ -5,93 +5,127 @@
  * DÉPEND DE       : lib/store, lib/supabase, lib/i18n, components/ui/*, features/jobs (OfferCard, OfferDetailModal), features/ratings, components/common/LocationFilter, components/home/CategoryGrid.
  * UTILISÉ PAR     : app (route /offres), features/favorites, features/search (via OfferCard/OfferDetailModal).
  */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useStore } from "lib/store";
 import { supabase } from "lib/supabase";
 import { useLang, t } from "lib/i18n";
-import { Input } from "components/ui/input";
-import { Button } from "components/ui/button";
-import { Badge } from "components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "components/ui/select";
-import { Sheet, SheetContent, SheetTrigger } from "components/ui/sheet";
-import { Separator } from "components/ui/separator";
-import OfferCard from "./OfferCard";
+import { useOffers, filterOffers } from "../hooks/useOffers";
+import { useEmployerProfiles } from "features/employers/hooks/useEmployerProfiles";
+import { useUserApplications } from "features/applications/hooks/useApplications";
+import { HOME_CATEGORIES, matchesHomeCategory } from "@/features/categories/categories";
+import BarreRecherche from "./BarreRecherche";
+import FiltresOffres from "./FiltresOffres";
+import PanneauFiltres from "./PanneauFiltres";
+import { DEFAULT_OFFER_FILTERS, type CompleteOfferFilters } from "../utils/offerFilters";
+import { isCandidateOfferVisible } from "../utils/filledOffers";
+import ListeOffres from "./ListeOffres";
 import OfferDetailModal from "./OfferDetailModal";
 import RatingModal from "features/ratings";
-import LocationFilter from "components/common/LocationFilter";
-import CategoryGrid from "components/home/CategoryGrid";
-import type { Offer } from "@/types";
+import type { Offer, Rating } from "@/types";
 
 export default function OffersView() {
   const { lang } = useLang();
-  const { state, patch, replace, update, currentUser } = useStore();
+  const { state, patch, replace, currentUser } = useStore();
   const navigate = useNavigate();
-  const [q, setQ] = useState("");
-  const [categories, setCategories] = useState<string[]>([]);
-  const [region, setRegion] = useState("");
-  const [city, setCity] = useState("");
-  const [quartier, setQuartier] = useState("");
-  const [contractFilter, setContractFilter] = useState("");
-  const [sortBy, setSortBy] = useState("date");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const [q, setQ] = useState(() => searchParams.get("q") ?? "");
+  const [filters, setFilters] = useState<CompleteOfferFilters>(DEFAULT_OFFER_FILTERS);
   const [selected, setSelected] = useState<Offer | null>(null);
   const [ratingOpen, setRatingOpen] = useState(false);
+  const mineOnly = currentUser.role === "employeur" && searchParams.get("mine") === "true";
+  const offerId = searchParams.get("offer");
+  const offersQuery = useOffers();
+  const employerProfilesQuery = useEmployerProfiles();
+  const applicationsQuery = useUserApplications(currentUser.id);
+  const favoritesQuery = useQuery({
+    queryKey: ["favorites", currentUser.id],
+    enabled: !!supabase,
+    queryFn: async () => {
+      if (!supabase) throw new Error("Supabase n'est pas configuré.");
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("offer_id")
+        .eq("user_id", currentUser.id);
+      if (error) throw error;
+      return (data ?? []).map((favorite) => favorite.offer_id);
+    },
+  });
+  const saveFavorite = useMutation({
+    mutationFn: async ({ offerId: id, saved }: { offerId: string; saved: boolean }) => {
+      if (!supabase) throw new Error("Supabase n'est pas configuré.");
+      const result = saved
+        ? await supabase.from("favorites").delete().eq("user_id", currentUser.id).eq("offer_id", id)
+        : await supabase.from("favorites").insert({ user_id: currentUser.id, offer_id: id });
+      if (result.error) throw result.error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["favorites", currentUser.id] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Impossible de modifier les favoris.");
+    },
+  });
+
+  useEffect(() => {
+    if (!offerId) return;
+    const sharedOffer = offersQuery.data?.find((offer) => offer.id === offerId);
+    if (sharedOffer) setSelected(sharedOffer);
+  }, [offerId, offersQuery.data]);
 
   const mine = currentUser.id;
-  const seeker = state.seekers.find((s) => s.userId === mine);
+  const categoryFilter = HOME_CATEGORIES.find((category) => category.id === searchParams.get("category"));
+  const employerNames = useMemo(
+    () => new Map((employerProfilesQuery.data ?? []).map((profile) => [profile.userId, profile.orgName])),
+    [employerProfilesQuery.data],
+  );
+  const filtered = useMemo(() => {
+    const visibleOffers = (offersQuery.data ?? []).filter((offer) =>
+      mineOnly
+        ? offer.employerId === mine
+        : isCandidateOfferVisible(offer, filters.hideFilled),
+    );
+    const categoryOffers = categoryFilter
+      ? visibleOffers.filter((offer) => matchesHomeCategory(categoryFilter, offer))
+      : visibleOffers;
+    return filterOffers(categoryOffers, { search: q, ...filters, hideFilled: mineOnly ? false : filters.hideFilled }, employerNames)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [categoryFilter, employerNames, filters, mine, mineOnly, offersQuery.data, q]);
 
-  const filtered = state.offers
-    .filter((o) => o.status === "publiée")
-    .filter((o) => !q || o.title.toLowerCase().includes(q.toLowerCase()) || o.description.toLowerCase().includes(q.toLowerCase()))
-    .filter((o) => !categories.length || categories.includes(o.category))
-    .filter((o) => !region || o.location.region === region)
-    .filter((o) => !city || o.location.city === city)
-    .filter((o) => !quartier || o.location.quartier === quartier)
-    .filter((o) => !contractFilter || o.contract === contractFilter)
-    .sort((a, b) => {
-      if (sortBy === "views") return b.views - a.views;
-      if (sortBy === "pay") return (b.pay || "").localeCompare(a.pay || "");
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-
-  const apply = (offer: Offer) => {
-    const exists = state.applications.some((a) => a.offerId === offer.id && a.seekerId === mine);
+  const apply = async (offer: Offer) => {
+    const exists = (applicationsQuery.data ?? []).some((application) => application.offerId === offer.id);
     if (exists) return;
+    if (!supabase) {
+      toast.error(lang === "fr" ? "Le service des offres est indisponible." : "The jobs service is unavailable.");
+      return;
+    }
     const appId = "app-" + Math.random().toString(36).slice(2, 9);
     const notifId = "notif-" + Math.random().toString(36).slice(2, 9);
-    patch("applications", {
+    const createdAt = new Date().toISOString();
+    const { error } = await supabase.from("applications").insert({
       id: appId,
-      offerId: offer.id,
-      seekerId: mine,
-      status: "envoyée",
-      createdAt: new Date().toISOString(),
+      offer_id: offer.id,
+      seeker_id: mine,
+      status: "envoyee",
+      created_at: createdAt,
     });
-    patch("notifications", {
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["applications", mine] });
+    const notificationResult = await supabase.from("notifications").insert({
       id: notifId,
-      userId: offer.employerId,
+      user_id: offer.employerId,
       type: "candidature",
-      body: `${currentUser.name} a candidaté à « ${offer.title} ».` ,
-      createdAt: new Date().toISOString(),
+      body: `${currentUser.name} a candidaté à « ${offer.title} ».`,
+      created_at: createdAt,
       read: false,
     });
-    if (supabase) {
-      supabase.from("applications").insert({
-        id: appId,
-        offer_id: offer.id,
-        seeker_id: mine,
-        status: "envoyee",
-        created_at: new Date().toISOString(),
-      }).then(({ error }) => { if (error) console.error("Supabase insert application error:", error); });
-      supabase.from("notifications").insert({
-        id: notifId,
-        user_id: offer.employerId,
-        type: "candidature",
-        body: `${currentUser.name} a candidaté à « ${offer.title} ».` ,
-        created_at: new Date().toISOString(),
-        read: false,
-      }).then(({ error }) => { if (error) console.error("Supabase insert notification error:", error); });
-    }
+    if (notificationResult.error) toast.error(notificationResult.error.message);
     setSelected(offer);
   };
 
@@ -131,14 +165,7 @@ export default function OffersView() {
       score,
       comment,
       createdAt: new Date().toISOString(),
-    } as any);
-  };
-
-  const toggleFavorite = (id: string) => {
-    const next = state.favorites.includes(id)
-      ? state.favorites.filter((x) => x !== id)
-      : [...state.favorites, id];
-    update("favorites", next);
+    } as Rating);
   };
 
   const isEmployer = currentUser.role === "employeur";
@@ -160,140 +187,57 @@ export default function OffersView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={`${t("search", lang)}...`}
+      <header className="space-y-4">
+        <h1 className="text-2xl font-semibold">
+          {mineOnly ? lang === "fr" ? "Mes offres" : "My jobs" : t("offers", lang)}
+        </h1>
+        <BarreRecherche value={q} onChange={setQ} />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <FiltresOffres
+            value={{ city: filters.city, contract: filters.contract }}
+            onChange={(quickFilters) => setFilters((previous) => ({ ...previous, ...quickFilters }))}
+          />
+          <PanneauFiltres
+            value={filters}
+            resultCount={filtered.length}
+            onChange={setFilters}
           />
         </div>
-      </div>
+      </header>
 
-      <div className="lg:hidden">
-        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm">{t("filters", lang)}</Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80 overflow-y-auto">
-            <div className="space-y-4 pt-4">
-              <div>
-                <div className="text-sm font-medium mb-2">{t("category", lang)}</div>
-                <CategoryGrid selected={categories} onToggle={(id) => setCategories((c) => c.includes(id) ? c.filter((x) => x !== id) : [...c, id])} />
-              </div>
-              <Separator />
-              <LocationFilter region={region} city={city} quartier={quartier} onChange={(f, v) => { if (f === "region") { setRegion(v); setCity(""); setQuartier(""); } else if (f === "city") { setCity(v); setQuartier(""); } else setQuartier(v); }} />
-              <Separator />
-              <div className="space-y-2">
-                <div className="text-sm font-medium">{t("contract", lang)}</div>
-                <Select value={contractFilter || "all"} onValueChange={(v) => setContractFilter(v === "all" ? "" : v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("all", lang) ?? "Tous"}</SelectItem>
-                    {["permanent", "temporaire", "mission", "stage", "temps-partiel", "indépendant"].map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <div className="text-sm font-medium">{lang === "fr" ? "Tri" : "Sort"}</div>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date">{lang === "fr" ? "Plus récents" : "Newest"}</SelectItem>
-                    <SelectItem value="views">{t("views", lang) ?? "Vues"}</SelectItem>
-                    <SelectItem value="pay">{t("pay", lang)}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button className="flex-1" onClick={() => setFiltersOpen(false)}>{lang === "fr" ? "Appliquer" : "Apply"}</Button>
-                <Button variant="outline" className="flex-1" onClick={() => { setCategories([]); setRegion(""); setCity(""); setQuartier(""); setContractFilter(""); setSortBy("date"); setQ(""); }}>{lang === "fr" ? "Réinitialiser" : "Reset"}</Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <div className="grid lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-1 space-y-4">
-          <div>
-            <div className="text-sm font-medium mb-2">{t("category", lang)}</div>
-            <CategoryGrid
-              selected={categories}
-              onToggle={(id) =>
-                setCategories((c) =>
-                  c.includes(id) ? c.filter((x) => x !== id) : [...c, id]
-                )
-              }
-            />
-          </div>
-          <Separator />
-          <LocationFilter
-            region={region}
-            city={city}
-            quartier={quartier}
-            onChange={(f, v) => {
-              if (f === "region") { setRegion(v); setCity(""); setQuartier(""); }
-              else if (f === "city") { setCity(v); setQuartier(""); }
-              else setQuartier(v);
-            }}
-          />
-          <Separator />
-          <div className="space-y-2">
-            <div className="text-sm font-medium">{t("contract", lang)}</div>
-            <Select value={contractFilter || "all"} onValueChange={(v) => setContractFilter(v === "all" ? "" : v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("all", lang) ?? "Tous"}</SelectItem>
-                {["permanent", "temporaire", "mission", "stage", "temps-partiel", "indépendant"].map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm font-medium">{lang === "fr" ? "Tri" : "Sort"}</div>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date">{lang === "fr" ? "Plus récents" : "Newest"}</SelectItem>
-                <SelectItem value="views">{t("views", lang) ?? "Vues"}</SelectItem>
-                <SelectItem value="pay">{t("pay", lang)}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">
-              {filtered.length} {t("offers", lang).toLowerCase()}
-            </span>
-          </div>
-          {filtered.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <p>{t("noResults", lang)}</p>
-              <p className="text-xs">{t("antiScam", lang)}</p>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-3">
-              {filtered.map((o) => (
-                <OfferCard
-                  key={o.id}
-                  offer={o}
-                  onClick={() => { setSelected(o); }}
-                  onApply={() => apply(o)}
-                  alreadyApplied={state.applications.some((a) => a.offerId === o.id && a.seekerId === mine)}
-                  isFavorite={state.favorites.includes(o.id)}
-                  onToggleFavorite={() => toggleFavorite(o.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        {filtered.length} {lang === "fr" ? "offre(s)" : "job(s)"}
+      </p>
+      <ListeOffres
+        items={filtered.map((offer) => ({
+          offer,
+          employerName: employerNames.get(offer.employerId) ?? "",
+        }))}
+        savedIds={new Set(favoritesQuery.data ?? [])}
+        loading={offersQuery.isLoading}
+        error={
+          !supabase
+            ? lang === "fr"
+              ? "Connexion à Supabase indisponible. Les offres ne peuvent pas être chargées."
+              : "Supabase is unavailable. Jobs cannot be loaded."
+            : offersQuery.isError
+              ? offersQuery.error instanceof Error
+                ? offersQuery.error.message
+                : lang === "fr" ? "Impossible de charger les offres." : "Could not load jobs."
+              : employerProfilesQuery.isError
+                ? lang === "fr" ? "Impossible de charger les entreprises." : "Could not load companies."
+                : favoritesQuery.isError
+                  ? lang === "fr" ? "Impossible de charger vos offres enregistrées." : "Could not load saved jobs."
+                  : undefined
+        }
+        onOpen={setSelected}
+        onToggleSaved={(offer) =>
+          saveFavorite.mutate({
+            offerId: offer.id,
+            saved: (favoritesQuery.data ?? []).includes(offer.id),
+          })
+        }
+      />
 
       <OfferDetailModal
         offer={selected}
@@ -304,7 +248,7 @@ export default function OffersView() {
         onContact={selected ? () => contactEmployer(selected) : undefined}
         onBoost={selected && isEmployer && selected.employerId === mine && !selected.boost ? () => boost(selected) : undefined}
         onRate={selected && !isEmployer ? () => setRatingOpen(true) : undefined}
-        alreadyApplied={selected ? state.applications.some((a) => a.offerId === selected.id && a.seekerId === mine) : false}
+        alreadyApplied={selected ? (applicationsQuery.data ?? []).some((application) => application.offerId === selected.id) : false}
         isEmployer={isEmployer}
       />
 

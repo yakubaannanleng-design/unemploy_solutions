@@ -5,6 +5,11 @@
   --font-sans: "Poppins", system-ui, sans-serif;
 }
 
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+}
+
 /* workca styles */
 :root {
   --radius: 0.625rem;
@@ -14,7 +19,7 @@
   --card-foreground: hsl(240 8% 12%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 8% 12%);
-  --primary: hsl(23 78% 47%);
+  --primary: #E8650A;
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(29 81% 94%);
   --secondary-foreground: hsl(23 67% 21%);
@@ -26,7 +31,7 @@
   --destructive-foreground: hsl(0 0% 100%);
   --border: hsl(29 40% 85%);
   --input: hsl(29 40% 85%);
-  --ring: hsl(23 78% 47%);
+  --ring: #E8650A;
   --chart-1: oklch(0.585 0.233 277.117);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -53,7 +58,7 @@
   --card-foreground: hsl(0 0% 98%);
   --popover: hsl(240 7% 13%);
   --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(22 79% 57%);
+  --primary: #E8650A;
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(19 27% 18%);
   --secondary-foreground: hsl(0 0% 98%);
@@ -65,7 +70,7 @@
   --destructive-foreground: hsl(0 0% 100%);
   --border: hsl(24 30% 28%);
   --input: hsl(24 30% 28%);
-  --ring: hsl(22 79% 57%);
+  --ring: #E8650A;
   --chart-1: oklch(0.585 0.233 277.117);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);

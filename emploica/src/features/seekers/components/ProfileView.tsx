@@ -1,4 +1,4 @@
-﻿/**
+﻿ou /**
  * PROBLÈME RÉSOLU : affiche et gère le profil de l'utilisateur connecté (chercheur ou employeur), avec upload photo/CV pour les chercheurs.
  * RESPONSABILITÉ  : rendu de l'écran Profil, affichage des données, upload Supabase Storage (photo/CV), formations recommandées.
  * NE FAIT PAS     : ne gère pas l'édition détaillée du profil chercheur (délégué à ProfileEditor) ; ne parle pas à Supabase pour les données profil (store).

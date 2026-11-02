@@ -15,12 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Switch } from "components/ui/switch";
 import { Separator } from "components/ui/separator";
 import { Input } from "components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Label } from "components/ui/label";
+import useTypeCompte from "@/features/compte/hooks/useTypeCompte";
 
 export default function SettingsView() {
   const { lang, setLang } = useLang();
   const { state, update, currentUser } = useStore();
+  const navigate = useNavigate();
+  const { selectSpace } = useTypeCompte();
 
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const toggleDark = (v: boolean) => {
@@ -92,6 +95,29 @@ export default function SettingsView() {
       <h2 className="text-xl font-semibold flex items-center gap-2">
         <SettingsIcon className="h-5 w-5" /> {t("settings", lang)}
       </h2>
+
+      {currentUser.role !== "admin" && (
+        <Card>
+          <CardHeader><CardTitle>{lang === "fr" ? "Espace" : "Workspace"}</CardTitle></CardHeader>
+          <CardContent className="flex items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              {lang === "fr" ? "Vous pouvez utiliser les deux espaces avec le même compte." : "Use both workspaces with the same account."}
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const nextSpace = currentUser.role === "chercheur" ? "employeur" : "chercheur";
+                selectSpace(nextSpace);
+                navigate(`/${nextSpace}`);
+              }}
+            >
+              {currentUser.role === "chercheur"
+                ? lang === "fr" ? "Espace employeur" : "Employer space"
+                : lang === "fr" ? "Espace candidat" : "Candidate space"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Sun className="h-4 w-4" /> {lang === "fr" ? "Apparence" : "Appearance"}</CardTitle></CardHeader>

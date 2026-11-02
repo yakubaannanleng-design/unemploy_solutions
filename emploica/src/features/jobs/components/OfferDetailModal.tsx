@@ -6,13 +6,14 @@
  * UTILISÉ PAR     : features/jobs (OffersView), features/favorites.
  */
 import { MapPin, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLang, t } from "lib/i18n";
 import { useStore } from "lib/store";
 import { categoryById } from "@/data/categories";
 import { getIcon } from "lib/iconMap";
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog";
 import { Separator } from "components/ui/separator";
 import type { Offer } from "@/types";
 
@@ -50,6 +51,7 @@ export default function OfferDetailModal({
   const mine = currentUser;
   const isMine = isEmployer ?? offer.employerId === mine.id;
   const employer = state.users.find((u) => u.id === offer.employerId);
+  const employerProfile = state.employers.find((profile) => profile.userId === offer.employerId);
   const rating = state.ratings.filter((r) => r.toUserId === offer.employerId && r.toRole === "employeur");
   const avgRating = rating.length ? rating.reduce((s, r) => s + r.score, 0) / rating.length : null;
   return (
@@ -67,6 +69,13 @@ export default function OfferDetailModal({
           </div>
         </DialogHeader>
         <div className="space-y-3 text-sm">
+          <Link
+            to={`/offres/${encodeURIComponent(offer.id)}`}
+            className="inline-flex text-sm font-medium text-primary hover:underline"
+            onClick={() => onOpenChange(false)}
+          >
+            {lang === "fr" ? "Voir le détail complet" : "View full details"}
+          </Link>
           <div className="flex items-center gap-2 text-muted-foreground">
             <MapPin_ /> {offer.location.region}, {offer.location.city}{offer.location.quartier ? `, ${offer.location.quartier}` : ""}
             {offer.location.lat && offer.location.lng && (
@@ -83,7 +92,17 @@ export default function OfferDetailModal({
           {employer && (
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">{lang === "fr" ? "Employeur" : "Employer"} : </span>
-              <span className="font-medium">{employer.name}</span>
+              {employerProfile ? (
+                <Link
+                  to={`/entreprises/${encodeURIComponent(offer.employerId)}`}
+                  className="font-medium hover:text-primary hover:underline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  {employer.name}
+                </Link>
+              ) : (
+                <span className="font-medium">{employer.name}</span>
+              )}
               {employer.verification === "vérifié" && <Badge variant="secondary">{t("verifiedEmployer", lang)}</Badge>}
               {avgRating && (
                 <span className="flex items-center gap-1 text-brand-600">

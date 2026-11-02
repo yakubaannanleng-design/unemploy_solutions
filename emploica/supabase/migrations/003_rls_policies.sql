@@ -52,7 +52,7 @@ alter table offers enable row level security;
 
 create policy "offers_select_published"
   on offers for select
-  using ( status = 'publiée' );
+  using ( status::text = 'publiee' );
 
 create policy "offers_insert_employer"
   on offers for insert

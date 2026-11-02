@@ -1,17 +1,20 @@
 ﻿// Composant principal de l'application Workca.
 // Gestion de la navigation, de l'authentification et du routage entre les pages.
-import { Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./lib/store";
+import { toast } from "sonner";
 import { Skeleton } from "./components/ui/skeleton";
 import { Toaster } from "./components/ui/sonner";
 import { useLang, t } from "./lib/i18n";
 import { supabase } from "./lib/supabase";
 import Header from "./components/layout/Header";
-import BottomNav from "./components/layout/BottomNav";
 import AppRoutes from "./app/routes";
+import AppLayout from "./layouts/AppLayout";
 import type { User, Offer, Rating } from "./types";
 import { DEMO_USERS } from "./data/mockData";
+
+const ChoixTypeCompte = lazy(() => import("./features/compte/components/ChoixTypeCompte"));
 
 // Liste des routes qui nécessitent d'être connecté.
 export default function App() {
@@ -73,9 +76,15 @@ export default function App() {
                payMode: o.pay_mode,
                createdAt: o.created_at,
                expiresAt: o.expires_at,
-               status: o.status,
+               status: o.status === "publiee" || o.status === "publiée"
+                 ? "publiée"
+                 : o.status === "cloturee" || o.status === "clôturée"
+                   ? "clôturée"
+                   : o.status,
                boost: o.boost,
                views: o.views,
+               isFilled: o.is_filled === true,
+               filledAt: o.filled_at,
              }));
              update("offers", mapped);
            }
@@ -160,6 +169,9 @@ export default function App() {
                 userId: e.user_id,
                 orgName: e.org_name,
                 description: e.description ?? "",
+                sector: e.sector,
+                city: e.city,
+                logoUrl: e.logo_url,
                 orgType: e.org_type,
                 verification: e.verification === "verifie" ? "vérifié" : "déclaré",
                 verifiedAt: e.verified_at,
@@ -181,10 +193,41 @@ export default function App() {
   }, []);
 
   const login = (user: User) => {
+    update("users", [...state.users.filter((existing) => existing.id !== user.id), user]);
     setCurrentUser(user.id);
     window.localStorage.setItem("workca:me", user.id);
     setIsAuthed(true);
     navigate("/" + user.role);
+    if (supabase) {
+      void (async () => {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (sessionData.session?.user.id !== user.id) return;
+
+        const { data: existing, error: readError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (readError) throw readError;
+        if (existing) return;
+
+        const { error: insertError } = await supabase.from("users").insert({
+          id: user.id,
+          role: user.role,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          password_hash: "",
+          status: "actif",
+          verification: "declare",
+          created_at: user.createdAt,
+        });
+        if (insertError) throw insertError;
+      })().catch((error: unknown) => {
+        toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer le compte.");
+      });
+    }
   };
 
   const logout = () => {
@@ -197,39 +240,6 @@ export default function App() {
   const switchUser = (id: string) => {
     const u = state.users.find((x) => x.id === id);
     if (u) login(u);
-  };
-
-  const createOffer = (data: Omit<Offer, "id">) => {
-    const id = "off-" + Math.random().toString(36).slice(2, 9);
-    patch("offers", { ...data, id });
-    if (supabase) {
-      supabase.from("offers").insert({
-        id,
-        employer_id: data.employerId,
-        title: data.title,
-        description: data.description,
-        tasks: data.tasks,
-        category: data.category,
-        skills: data.skills,
-        location_region: data.location.region,
-        location_city: data.location.city,
-        location_quartier: data.location.quartier,
-        lat: data.location.lat,
-        lng: data.location.lng,
-        contract: data.contract,
-        duration: data.duration,
-        schedule: data.schedule,
-        pay: data.pay,
-        pay_mode: data.payMode,
-        created_at: data.createdAt,
-        status: data.status,
-        boost: data.boost,
-        views: data.views,
-      }).then(({ error }) => {
-        if (error) console.error("Supabase insert offer error:", error);
-      });
-    }
-    navigate("/" + (currentUser?.role ?? "chercheur"));
   };
 
   const boostOffer = (offer: Offer) => {
@@ -255,21 +265,27 @@ export default function App() {
   if (isAuthed && currentUser && (location.pathname === "/" || location.pathname === "/login")) {
     return <Navigate to={"/" + currentUser.role} replace />;
   }
+  if (
+    isAuthed &&
+    currentUser &&
+    currentUser.role !== "admin" &&
+    !Object.prototype.hasOwnProperty.call(state.activeSpaces, currentUser.id)
+  ) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Suspense fallback={<div className="min-h-screen" />}>
+          <ChoixTypeCompte />
+        </Suspense>
+        <Toaster />
+      </div>
+    );
+  }
 
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-1 focus:rounded">
-        {lang === "fr" ? "Aller au contenu principal" : "Skip to main content"}
-      </a>
-      <Header
-        currentUser={isAuthed ? currentUser : null}
-        onLogout={logout}
-        onSwitchUser={switchUser}
-        demoUsers={DEMO_USERS}
-      />
+  const pageContent = (
+    <>
       <main id="main-content" className="container px-4 py-6">
         <Suspense fallback={<div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-32 w-full" /><Skeleton className="h-32 w-full" /></div>}>
-          <AppRoutes onLogin={login} onSubmitOffer={createOffer} />
+          <AppRoutes onLogin={login} />
         </Suspense>
       </main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
@@ -280,10 +296,30 @@ export default function App() {
           </div>
         </div>
       </footer>
-      {isAuthed && <BottomNav currentUser={currentUser} />}
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-1 focus:rounded">
+        {lang === "fr" ? "Aller au contenu principal" : "Skip to main content"}
+      </a>
+      {isAuthed && currentUser ? (
+        <AppLayout currentUser={currentUser} onLogout={logout}>
+          {pageContent}
+        </AppLayout>
+      ) : (
+        <>
+          <Header
+            currentUser={null}
+            onLogout={logout}
+            onSwitchUser={switchUser}
+            demoUsers={DEMO_USERS}
+          />
+          {pageContent}
+        </>
+      )}
       <Toaster />
     </div>
   );
 }
-
-

@@ -7,10 +7,17 @@ import { StoreProvider } from "../lib/store";
 import { OffersView } from "features/jobs";
 
 vi.mock("../lib/supabase", () => ({
-  supabase: null,
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: async () => ({ data: [], error: null }),
+      }),
+    }),
+  },
 }));
 
 vi.mock("../features/jobs/hooks/useOffers", () => ({
+  filterOffers: (offers: unknown[]) => offers,
   useOffers: () => ({
     data: [
       {
@@ -36,13 +43,21 @@ vi.mock("../features/jobs/hooks/useOffers", () => ({
   }),
 }));
 
+vi.mock("../features/employers/hooks/useEmployerProfiles", () => ({
+  useEmployerProfiles: () => ({ data: [], isLoading: false, isError: false }),
+}));
+
+vi.mock("../features/applications/hooks/useApplications", () => ({
+  useUserApplications: () => ({ data: [], isLoading: false, isError: false }),
+}));
+
 describe("OffersView - application", () => {
   it("affiche l'offre disponible", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <StoreProvider>
           <BrowserRouter>
-            <OffersView currentUser={{ id: "u-seeker", role: "chercheur", name: "Paul Mbarga" }} />
+            <OffersView />
           </BrowserRouter>
         </StoreProvider>
       </QueryClientProvider>

@@ -6,25 +6,32 @@
  * UTILISÉ PAR     : app (route /recherche).
  */
 // Vue de recherche globale : offres, utilisateurs, messages.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
-import { Search, Briefcase, User, MessageSquare } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { OfferCard } from "features/jobs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { isCandidateOfferVisible } from "@/features/jobs/utils/filledOffers";
 
 export default function SearchView() {
   const { lang } = useLang();
   const { state } = useStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const candidatesOnly = searchParams.get("type") === "candidats";
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<"offres" | "utilisateurs" | "messages">("offres");
+
+  useEffect(() => {
+    if (candidatesOnly) setTab("utilisateurs");
+  }, [candidatesOnly]);
 
   const ql = q.trim().toLowerCase();
   const offers = ql
     ? state.offers.filter(
         (o) =>
-          o.status === "publiée" &&
+          isCandidateOfferVisible(o) &&
           (o.title.toLowerCase().includes(ql) ||
             o.description.toLowerCase().includes(ql) ||
             o.skills.some((s) => s.toLowerCase().includes(ql)) ||
@@ -34,9 +41,10 @@ export default function SearchView() {
   const users = ql
     ? state.users.filter(
         (u) =>
-          u.name.toLowerCase().includes(ql) ||
-          u.phone.includes(ql) ||
-          (u.email ?? "").toLowerCase().includes(ql)
+          (!candidatesOnly || u.role === "chercheur") &&
+          (u.name.toLowerCase().includes(ql) ||
+            (!candidatesOnly && u.phone.includes(ql)) ||
+            (!candidatesOnly && (u.email ?? "").toLowerCase().includes(ql)))
       )
     : [];
   const messages = ql
@@ -50,13 +58,17 @@ export default function SearchView() {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold flex items-center gap-2">
-        <Search className="h-5 w-5" /> {lang === "fr" ? "Recherche" : "Search"}
+        <Search className="h-5 w-5" /> {candidatesOnly
+          ? lang === "fr" ? "Candidats" : "Candidates"
+          : lang === "fr" ? "Recherche" : "Search"}
       </h2>
       <div className="flex gap-2">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={lang === "fr" ? "Rechercher des offres, utilisateurs, messages..." : "Search offers, users, messages..."}
+          placeholder={candidatesOnly
+            ? lang === "fr" ? "Rechercher un candidat..." : "Search candidates..."
+            : lang === "fr" ? "Rechercher des offres, utilisateurs, messages..." : "Search offers, users, messages..."}
           className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
           autoFocus
         />
@@ -94,7 +106,7 @@ export default function SearchView() {
                 <User className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <div className="font-medium">{u.name}</div>
-                  <div className="text-xs text-muted-foreground">{u.role} · {u.phone}</div>
+                  <div className="text-xs text-muted-foreground">{u.role}{!candidatesOnly && u.phone ? ` · ${u.phone}` : ""}</div>
                 </div>
               </div>
             ))}

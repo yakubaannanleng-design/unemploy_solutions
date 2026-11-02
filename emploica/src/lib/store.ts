@@ -37,6 +37,7 @@ const STORE_VERSION = 2;
 interface StoreState {
   version: number;
   currentUserId: string;
+  activeSpaces: Record<string, Workspace>;
   users: User[];
   seekers: SeekerProfile[];
   employers: EmployerProfile[];
@@ -54,11 +55,13 @@ interface StoreState {
 
 type StoreApi = ReturnType<typeof useStoreValue>;
 const StoreContext = createContext<StoreApi | null>(null);
+export type Workspace = "chercheur" | "employeur";
 
 function defaultState(): StoreState {
   return {
     version: STORE_VERSION,
     currentUserId: DEMO_USERS[0].id,
+    activeSpaces: {},
     users: DEMO_USERS,
     seekers: DEMO_SEEKERS,
     employers: DEMO_EMPLOYERS,
@@ -122,10 +125,11 @@ function useStoreValue() {
     setState((prev) => ({ ...prev, [key]: prev[key].filter((x: any) => x.id !== id) }) as StoreState);
   };
 
-  const me: User = useMemo(
-    () => state.users.find((u) => u.id === state.currentUserId) ?? state.users[0],
-    [state.users, state.currentUserId]
-  );
+  const me: User = useMemo(() => {
+    const user = state.users.find((item) => item.id === state.currentUserId) ?? state.users[0];
+    const activeSpace = state.activeSpaces[state.currentUserId];
+    return activeSpace && user.role !== "admin" ? { ...user, role: activeSpace } : user;
+  }, [state.activeSpaces, state.users, state.currentUserId]);
 
   return {
     state,
@@ -134,6 +138,8 @@ function useStoreValue() {
     replace,
     remove,
     setCurrentUser: (id: string) => update("currentUserId", id),
+    setActiveSpace: (space: Workspace) =>
+      update("activeSpaces", { ...state.activeSpaces, [state.currentUserId]: space }),
     currentUser: me,
   };
 }

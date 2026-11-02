@@ -7,7 +7,9 @@ export function useUsers() {
     queryKey: ["users"],
     queryFn: async () => {
       if (!supabase) return [];
-      const { data, error } = await supabase.from("users").select("*");
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,role,name,phone,email,status,verification,created_at");
       if (error) throw error;
       return (data ?? []).map((u: Record<string, unknown>) => ({
         id: u.id,

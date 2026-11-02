@@ -3,8 +3,22 @@
 ## 1. Exécuter le schéma SQL
 1. Ouvrez votre projet Supabase : https://supabase.com/dashboard/project/vmmvniqdxnvpkmqhrbxb
 2. Allez dans **SQL Editor** → **New query**.
-3. Copiez le contenu de `supabase/migrations/001_initial_schema.sql` et exécutez-le.
-4. Vérifiez dans **Table Editor** que les tables sont créées.
+3. Exécutez les migrations disponibles de `supabase/migrations/` dans l'ordre numérique (`001`, `003`, `004`, `005`, `006`, `007`, `008`, `009`, `010`, puis `011`) dans le SQL Editor.
+4. Vérifiez dans **Table Editor** que les tables et les colonnes des offres sont créées.
+
+La migration `004_offer_search_filters.sql` ajoute les champs structurés utilisés par les filtres détaillés d'offres. Elle doit être appliquée aux projets Supabase déjà initialisés avant d'utiliser ces filtres.
+
+La migration `005_filled_offers.sql` ajoute la date de clôture des offres pourvues, la fenêtre de visibilité de sept jours, les notifications aux candidats ayant postulé ou enregistré l'offre, et l'accès RLS nécessaire aux détails partagés. Elle doit être appliquée après la migration 004.
+
+La migration `006_employer_company_profile.sql` ajoute le secteur, la ville et le logo facultatif au profil d'entreprise, utilisés par l'étape de création du profil employeur.
+
+La migration `007_employer_monthly_views.sql` enregistre une vue par compte et par offre chaque jour, afin de calculer les vues mensuelles du tableau de bord employeur. Elle doit être appliquée après les migrations 004 à 006.
+
+La migration `008_offer_publication_contact.sql` ajoute à chaque offre le canal de contact choisi et l'option de partage Telegram. Les offres créées avant cette migration conservent leurs options de contact existantes.
+
+La migration `009_expired_offer_status.sql` ajoute le statut d'offre expirée. La migration `010_employer_offer_management.sql` bloque les candidatures sur les offres clôturées ou expirées et planifie leur expiration toutes les quinze minutes avec `pg_cron`.
+
+La migration `011_employer_follows.sql` ajoute le suivi des entreprises, ses règles RLS et les notifications envoyées aux abonnés lorsqu'une offre est publiée. Elle doit être appliquée après les migrations précédentes.
 
 ## 2. Récupérer les clés API
 1. Allez dans **Project Settings** → **API**.

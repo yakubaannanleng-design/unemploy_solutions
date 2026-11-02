@@ -11,13 +11,16 @@ import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
 import { Heart } from "lucide-react";
 import { OfferCard, OfferDetailModal } from "features/jobs";
+import { isCandidateOfferVisible } from "@/features/jobs/utils/filledOffers";
 import type { Offer } from "@/types";
 
 export default function FavoritesView() {
   const { lang } = useLang();
   const { state, update } = useStore();
   const [selected, setSelected] = useState<Offer | null>(null);
-  const favOffers = state.offers.filter((o) => state.favorites.includes(o.id));
+  const favOffers = state.offers.filter(
+    (offer) => state.favorites.includes(offer.id) && isCandidateOfferVisible(offer),
+  );
 
   const toggleFav = (id: string) => {
     const next = state.favorites.includes(id)
