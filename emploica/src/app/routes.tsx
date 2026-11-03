@@ -18,6 +18,7 @@ const PageEntreprise = lazy(() => import("../features/entreprises/PageEntreprise
 const EmployerHome = lazy(() => import("../features/dashboard").then((m) => ({ default: m.EmployerHome })));
 const DashboardEmployeur = lazy(() => import("../features/employeur").then((m) => ({ default: m.DashboardEmployeur })));
 const MesOffres = lazy(() => import("../features/employeur").then((m) => ({ default: m.MesOffres })));
+const DetailCandidat = lazy(() => import("../features/employeur/DetailCandidat"));
 const AdminPanel = lazy(() => import("../features/admin"));
 const OffersView = lazy(() => import("features/jobs").then((m) => ({ default: m.OffersView })));
 const DetailOffre = lazy(() => import("features/jobs").then((m) => ({ default: m.DetailOffre })));
@@ -111,6 +112,14 @@ export default function AppRoutes({ onLogin }: { onLogin: (user: User) => void }
         element={
           <RequireAuth>
             <MesOffres currentUser={currentUser} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/employeur/candidatures/:id"
+        element={
+          <RequireAuth>
+            <DetailCandidat currentUser={currentUser} />
           </RequireAuth>
         }
       />

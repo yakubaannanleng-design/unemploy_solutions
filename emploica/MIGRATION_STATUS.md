@@ -44,7 +44,10 @@ Suivi de la restructuration par domaines.
 ## Refonte des interfaces Workca
 - [x] étape 5 — entreprises qui recrutent sur l'accueil (données Supabase)
 - [x] étape 11 — page publique d'entreprise, liens depuis les offres et suivi Supabase
+- [x] étape 13 — suivi des candidatures Supabase, filtres de statut et liens vers les offres
+- [x] étape 24 — fiche candidat depuis les candidatures récentes, revue sécurisée et CV lié au profil
 - [ ] appliquer la migration `011_employer_follows.sql` au projet Supabase
+- [ ] appliquer la migration `012_application_candidate_review.sql` au projet Supabase
 
 ## Vérifications (dernier domaine : phase 7, morceau 1 routes — commit `4b6188d`)
 - Build : ✅

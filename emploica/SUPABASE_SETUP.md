@@ -3,7 +3,7 @@
 ## 1. Exécuter le schéma SQL
 1. Ouvrez votre projet Supabase : https://supabase.com/dashboard/project/vmmvniqdxnvpkmqhrbxb
 2. Allez dans **SQL Editor** → **New query**.
-3. Exécutez les migrations disponibles de `supabase/migrations/` dans l'ordre numérique (`001`, `003`, `004`, `005`, `006`, `007`, `008`, `009`, `010`, puis `011`) dans le SQL Editor.
+3. Exécutez les migrations disponibles de `supabase/migrations/` dans l'ordre numérique (`001`, `003`, `004`, `005`, `006`, `007`, `008`, `009`, `010`, `011`, puis `012`) dans le SQL Editor.
 4. Vérifiez dans **Table Editor** que les tables et les colonnes des offres sont créées.
 
 La migration `004_offer_search_filters.sql` ajoute les champs structurés utilisés par les filtres détaillés d'offres. Elle doit être appliquée aux projets Supabase déjà initialisés avant d'utiliser ces filtres.
@@ -19,6 +19,8 @@ La migration `008_offer_publication_contact.sql` ajoute à chaque offre le canal
 La migration `009_expired_offer_status.sql` ajoute le statut d'offre expirée. La migration `010_employer_offer_management.sql` bloque les candidatures sur les offres clôturées ou expirées et planifie leur expiration toutes les quinze minutes avec `pg_cron`.
 
 La migration `011_employer_follows.sql` ajoute le suivi des entreprises, ses règles RLS et les notifications envoyées aux abonnés lorsqu'une offre est publiée. Elle doit être appliquée après les migrations précédentes.
+
+La migration `012_application_candidate_review.sql` rend le CV persistant dans le profil chercheur, limite la lecture des profils aux candidats ayant postulé auprès de l'employeur authentifié, supprime la possibilité pour un candidat de modifier directement le statut d'une candidature et autorise la décision de présélection/refus via une fonction SQL vérifiant la propriété de l'offre. Elle doit être appliquée après les migrations précédentes.
 
 ## 2. Récupérer les clés API
 1. Allez dans **Project Settings** → **API**.

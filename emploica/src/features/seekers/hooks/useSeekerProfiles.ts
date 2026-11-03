@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { SeekerProfile } from "../types";
 
-export function useSeekerProfiles() {
+export function useSeekerProfiles(enabled = true) {
   return useQuery({
     queryKey: ["seekerProfiles"],
     queryFn: async () => {
@@ -27,6 +27,6 @@ export function useSeekerProfiles() {
         rating: s.rating,
       })) as SeekerProfile[];
     },
-    enabled: !!supabase,
+    enabled: !!supabase && enabled,
   });
 }

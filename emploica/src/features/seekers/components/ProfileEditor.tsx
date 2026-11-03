@@ -6,13 +6,10 @@
  * UTILISÉ PAR     : features/seekers (ProfileView).
  */
 import { useState } from "react";
-import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
 import { Input } from "components/ui/input";
 import { Button } from "components/ui/button";
-import { Badge } from "components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
-import { Separator } from "components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "components/ui/select";
 import type { SeekerProfile } from "../types";
 
@@ -20,11 +17,11 @@ interface ProfileEditorProps {
   userId: string;
   initial?: SeekerProfile;
   onSave: (p: SeekerProfile) => void;
+  saving?: boolean;
 }
 
-export default function ProfileEditor({ userId, initial, onSave }: ProfileEditorProps) {
+export default function ProfileEditor({ userId, initial, onSave, saving = false }: ProfileEditorProps) {
   const { lang } = useLang();
-  const { state } = useStore();
   const [form, setForm] = useState<SeekerProfile>(
     initial ?? {
       userId,
@@ -78,6 +75,10 @@ export default function ProfileEditor({ userId, initial, onSave }: ProfileEditor
             <Label>{t("experience", lang)}</Label>
             <Input value={form.experience} onChange={(e) => set("experience", e.target.value)} />
           </div>
+          <div>
+            <Label>{lang === "fr" ? "Formation" : "Education"}</Label>
+            <Input value={form.education ?? ""} onChange={(e) => set("education", e.target.value)} />
+          </div>
         </CardContent>
       </Card>
 
@@ -107,7 +108,11 @@ export default function ProfileEditor({ userId, initial, onSave }: ProfileEditor
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={() => onSave(form)}>{t("save", lang)}</Button>
+        <Button onClick={() => onSave(form)} disabled={saving}>
+          {saving
+            ? lang === "fr" ? "Enregistrement…" : "Saving…"
+            : t("save", lang)}
+        </Button>
       </div>
     </div>
   );

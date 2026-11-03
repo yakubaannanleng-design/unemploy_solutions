@@ -1,4 +1,4 @@
-﻿ou /**
+/**
  * PROBLÈME RÉSOLU : affiche et gère le profil de l'utilisateur connecté (chercheur ou employeur), avec upload photo/CV pour les chercheurs.
  * RESPONSABILITÉ  : rendu de l'écran Profil, affichage des données, upload Supabase Storage (photo/CV), formations recommandées.
  * NE FAIT PAS     : ne gère pas l'édition détaillée du profil chercheur (délégué à ProfileEditor) ; ne parle pas à Supabase pour les données profil (store).
@@ -7,6 +7,7 @@
  * NOTE            : composant MIXTE (chercheur + employeur) — À SCINDER PLUS TARD : la branche employeur devra migrer vers features/employers.
  */
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
 import { Link } from "react-router-dom";
@@ -14,22 +15,65 @@ import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Separator } from "components/ui/separator";
-import { User, Building2, ShieldCheck, MapPin, Briefcase, Star, BookOpen } from "lucide-react";
+import { Building2, ShieldCheck, MapPin, Star, BookOpen, Share2, FileText } from "lucide-react";
 import { categoryById } from "@/data/categories";
 import ProfileEditor from "./ProfileEditor";
 import { toast } from "sonner";
 import { Progress } from "components/ui/progress";
 import { supabase } from "lib/supabase";
 import { TRAININGS } from "@/data/trainings";
+import { useSeekerProfiles } from "../hooks/useSeekerProfiles";
+import type { SeekerProfile } from "../types";
 
 export default function ProfileView() {
   const { lang } = useLang();
   const { state, patch, update, currentUser } = useStore();
+  const queryClient = useQueryClient();
   const mine = currentUser.id;
-  const seeker = state.seekers.find((s) => s.userId === mine);
-  const emp = state.employers.find((e) => e.userId === mine);
   const isEmployer = currentUser.role === "employeur";
+  const seekerProfilesQuery = useSeekerProfiles(!isEmployer);
+  const seeker = seekerProfilesQuery.data?.find((profile) => profile.userId === mine);
+  const emp = state.employers.find((e) => e.userId === mine);
   const [uploading, setUploading] = useState(false);
+  const profileMutation = useMutation({
+    mutationFn: async (profile: SeekerProfile) => {
+      if (!supabase) throw new Error(lang === "fr" ? "Connexion à Supabase indisponible." : "Supabase is unavailable.");
+      const { data, error } = await supabase
+        .from("seeker_profiles")
+        .update({
+          bio: profile.bio,
+          skills: profile.skills,
+          categories: profile.categories,
+          contract_wanted: profile.contractWanted,
+          availability: profile.availability,
+          zone_region: profile.zone.region,
+          zone_city: profile.zone.city,
+          zone_quartier: profile.zone.quartier,
+          radius_km: profile.radiusKm,
+          experience: profile.experience,
+          education: profile.education ?? null,
+          languages: profile.languages,
+        })
+        .eq("user_id", mine)
+        .select("user_id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error(lang === "fr" ? "Le profil candidat est introuvable." : "Candidate profile not found.");
+      return profile;
+    },
+    onSuccess: async (profile) => {
+      update("seekers", [...state.seekers.filter((item) => item.userId !== mine), profile]);
+      await queryClient.invalidateQueries({ queryKey: ["seekerProfiles"] });
+      setEditing(false);
+      toast.success(lang === "fr" ? "Profil mis à jour." : "Profile updated.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error
+        ? error.message
+        : lang === "fr" ? "Impossible d'enregistrer le profil." : "Could not save your profile.",
+      );
+    },
+  });
   const compressImage = (file: File, maxSize = 1024): Promise<File> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -59,7 +103,11 @@ export default function ProfileView() {
   };
   const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !seeker || !supabase) return;
+    if (!file || !seeker) return;
+    if (!supabase) {
+      toast.error(lang === "fr" ? "Connexion à Supabase indisponible." : "Supabase is unavailable.");
+      return;
+    }
     setUploading(true);
     try {
       const compressed = await compressImage(file);
@@ -69,10 +117,19 @@ export default function ProfileView() {
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = data.publicUrl;
-      update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, photo: url } : s)));
+      const { error: profileError } = await supabase
+        .from("seeker_profiles")
+        .update({ photo: url })
+        .eq("user_id", mine);
+      if (profileError) throw profileError;
+      update("seekers", [...state.seekers.filter((item) => item.userId !== mine), { ...seeker, photo: url }]);
+      await queryClient.invalidateQueries({ queryKey: ["seekerProfiles"] });
       toast.success(lang === "fr" ? "Photo mise à jour." : "Photo updated.");
-    } catch (err: any) {
-      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer la photo, réessaie." : "Could not upload photo, try again."));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error
+        ? err.message
+        : lang === "fr" ? "Impossible d'envoyer la photo, réessaie." : "Could not upload photo, try again.",
+      );
     } finally {
       setUploading(false);
     }
@@ -80,18 +137,35 @@ export default function ProfileView() {
   
   const uploadCv = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !seeker || !supabase) return;
+    if (!file || !seeker) return;
+    if (!supabase) {
+      toast.error(lang === "fr" ? "Connexion à Supabase indisponible." : "Supabase is unavailable.");
+      return;
+    }
+    if (file.type !== "application/pdf" && !file.name.toLocaleLowerCase().endsWith(".pdf")) {
+      toast.error(lang === "fr" ? "Le CV doit être un fichier PDF." : "The résumé must be a PDF file.");
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${currentUser.id}/cv.${ext}`;
+      const path = `${currentUser.id}/cv.pdf`;
       const { error: upErr } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("cvs").getPublicUrl(path);
-      update("seekers", state.seekers.map((s) => (s.userId === currentUser.id ? { ...s, cvUrl: data.publicUrl } : s)));
+      const { error: profileError } = await supabase
+        .from("seeker_profiles")
+        .update({ cv_url: data.publicUrl })
+        .eq("user_id", currentUser.id);
+      if (profileError) throw profileError;
+      update("seekers", [...state.seekers.filter((item) => item.userId !== mine), { ...seeker, cvUrl: data.publicUrl }]);
+      await queryClient.invalidateQueries({ queryKey: ["seekerProfiles"] });
       toast.success(lang === "fr" ? "CV téléversé." : "CV uploaded.");
-    } catch (err: any) {
-      toast.error(err?.message ?? (lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again."));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error
+        ? err.message
+        : lang === "fr" ? "Impossible d'envoyer le fichier, réessaie." : "Could not upload file, try again.",
+      );
     } finally {
       setUploading(false);
     }
@@ -159,15 +233,28 @@ export default function ProfileView() {
     );
   }
 
+  if (seekerProfilesQuery.isLoading) {
+    return <p role="status" className="py-10 text-center text-muted-foreground">
+      {lang === "fr" ? "Chargement du profil…" : "Loading profile…"}
+    </p>;
+  }
+  if (seekerProfilesQuery.isError || !supabase) {
+    return <p role="alert" className="py-10 text-center text-destructive">
+      {seekerProfilesQuery.error instanceof Error
+        ? seekerProfilesQuery.error.message
+        : lang === "fr"
+          ? "Le profil candidat ne peut pas être chargé depuis Supabase."
+          : "The candidate profile could not be loaded from Supabase."}
+    </p>;
+  }
+
   if (editing && seeker) {
     return (
       <ProfileEditor
         userId={mine}
         initial={seeker}
-        onSave={(p) => {
-          update("seekers", state.seekers.map((s) => (s.userId === mine ? p : s)));
-          setEditing(false);
-        }}
+        onSave={(profile) => profileMutation.mutate(profile)}
+        saving={profileMutation.isPending}
       />
     );
   }
@@ -175,13 +262,34 @@ export default function ProfileView() {
   if (!seeker) return <p className="text-muted-foreground">{t("noResults", lang)}</p>;
   const cat = categoryById(seeker.categories[0]);
   const recommended = TRAININGS.filter((tr) => seeker.categories.includes(tr.category)).slice(0, 3);
-  const myRatings = state.ratings.filter((r) => r.fromUserId === mine);
+  const shareProfile = () => {
+    const profileUrl = `${window.location.origin}/profil`;
+    const shareText = [
+      currentUser.name,
+      seeker.education,
+      seeker.zone.city,
+      seeker.skills.join(", "),
+      profileUrl,
+    ].filter(Boolean).join(" · ");
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">{t("profile", lang)}</h2>
-        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{t("edit", lang) ?? "Modifier"}</Button>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={shareProfile}>
+            <Share2 className="mr-1 h-4 w-4" aria-hidden="true" />
+            {lang === "fr" ? "Partager" : "Share"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{t("edit", lang) ?? "Modifier"}</Button>
+        </div>
+      </div>
       <Card>
         <CardHeader><CardTitle>{lang === "fr" ? "Complétion du profil" : "Profile completion"}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
@@ -221,9 +329,6 @@ export default function ProfileView() {
         </CardContent>
       </Card>
 
-
-      </div>
-
       <Card>
         <CardHeader><CardTitle>{t("jobSeeker", lang)}</CardTitle></CardHeader>
         <CardContent>
@@ -245,9 +350,14 @@ export default function ProfileView() {
             </div>
             <div className="mt-2">
               <label className="text-xs text-muted-foreground cursor-pointer">
-                <input type="file" accept=".pdf,.doc,.docx" onChange={uploadCv} disabled={uploading} className="hidden" />
+                <input type="file" accept="application/pdf,.pdf" onChange={uploadCv} disabled={uploading} className="hidden" />
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-input text-sm hover:bg-accent cursor-pointer">
-                  {uploading ? (lang === "fr" ? "Téléchargement..." : "Uploading...") : (lang === "fr" ? "Télécharger un CV" : "Upload CV")}
+                  <FileText className="h-4 w-4" aria-hidden="true" />
+                  {uploading
+                    ? (lang === "fr" ? "Téléchargement..." : "Uploading...")
+                    : seeker.cvUrl
+                      ? (lang === "fr" ? "Remplacer le CV" : "Replace résumé")
+                      : (lang === "fr" ? "Télécharger un CV PDF" : "Upload PDF résumé")}
                 </span>
               </label>
             </div>
@@ -260,7 +370,7 @@ export default function ProfileView() {
               <div className="text-sm text-muted-foreground">
                 {cat ? (lang === "fr" ? cat.name : cat.nameEn) : "—"} · {seeker.zone.city}
               </div>
-cd            </div>
+            </div>
           </div>
           <Separator className="my-3" />
            <div className="space-y-2 text-sm">
@@ -330,5 +440,3 @@ cd            </div>
     </div>
   );
 }
-
-

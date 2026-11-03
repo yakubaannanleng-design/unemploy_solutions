@@ -36,10 +36,13 @@ export default function ListeCandidatsRecents({ candidates, lang }: ListeCandida
                 >
                   {candidate.userName.trim().charAt(0).toUpperCase() || "?"}
                 </span>
-                <div className="min-w-0 flex-1">
+                <Link
+                  to={`/employeur/candidatures/${encodeURIComponent(candidate.applicationId)}`}
+                  className="min-w-0 flex-1"
+                >
                   <p className="truncate font-medium">{candidate.userName}</p>
                   <p className="truncate text-sm text-muted-foreground">{candidate.offerTitle}</p>
-                </div>
+                </Link>
                 <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-xs">
                   {statusLabel(candidate.status, lang)}
                 </span>
