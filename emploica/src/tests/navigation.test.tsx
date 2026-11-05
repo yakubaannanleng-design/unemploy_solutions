@@ -24,11 +24,18 @@ describe("BottomNav", () => {
     );
 
     expect(screen.getByRole("link", { name: "Candidatures" })).toHaveAttribute("href", "/candidatures");
-    expect(screen.getByRole("button", { name: "Publier" })).toBeInTheDocument();
+    const nav = screen.getByRole("navigation", { name: "Navigation principale" });
+    const publishButton = screen.getByRole("button", { name: "Publier" });
+    expect(nav).toHaveClass("grid-cols-5");
+    expect(nav).toHaveClass("bg-background", "z-40");
+    expect(nav).toHaveStyle({ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" });
+    expect(nav.nextElementSibling).toHaveStyle({ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" });
+    expect(publishButton).toHaveClass("w-full", "h-full");
+    expect(publishButton).not.toHaveClass("-top-3");
 
-    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
-    expect(screen.getByText("Pour publier, créez votre profil employeur")).toBeInTheDocument();
+    fireEvent.click(publishButton);
+    expect(screen.getByText("Pour publier, créez votre profil professionnel")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Plus tard" }));
-    expect(screen.queryByText("Pour publier, créez votre profil employeur")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pour publier, créez votre profil professionnel")).not.toBeInTheDocument();
   });
 });

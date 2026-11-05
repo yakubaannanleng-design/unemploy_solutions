@@ -17,7 +17,7 @@ import type { FlashOffer } from "@/types";
 
 export default function FlashOffersView() {
   const { lang } = useLang();
-  const { state, patch, currentUser } = useStore();
+  const { state, patch } = useStore();
   const [applied, setApplied] = useState<Record<string, boolean>>({});
 
   const active = state.flashOffers.filter((f) => new Date(f.endsAt) > new Date());

@@ -5,7 +5,7 @@
  * DÉPEND DE       : lib/i18n, @/data/categories, lib/iconMap.
  * UTILISÉ PAR     : features/jobs, features/search.
  */
-import { useLang, t } from "lib/i18n";
+import { useLang } from "lib/i18n";
 import { CATEGORIES } from "@/data/categories";
 import { getIcon } from "lib/iconMap";
 

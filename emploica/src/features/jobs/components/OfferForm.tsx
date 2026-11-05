@@ -17,7 +17,6 @@ import { Separator } from "components/ui/separator";
 import CategoryGrid from "components/home/CategoryGrid";
 import LocationFilter from "components/common/LocationFilter";
 import type { ContractType, Offer } from "@/types";
-import { makeId } from "@/data/mockData";
 
 const CONTRACTS: { value: ContractType; key: string }[] = [
   { value: "permanent", key: "permanent" },
@@ -36,7 +35,7 @@ interface OfferFormProps {
 
 export default function OfferForm({ initial, onSubmit, onCancel }: OfferFormProps) {
   const { lang } = useLang();
-  const { state, currentUser } = useStore();
+  const { currentUser } = useStore();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [tasks, setTasks] = useState(initial?.tasks?.join("\n") ?? "");

@@ -34,10 +34,10 @@ export default function FenetrePublier({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {lang === "fr" ? "Pour publier, créez votre profil employeur" : "Create an employer profile to publish"}
+            {lang === "fr" ? "Pour publier, créez votre profil professionnel" : "Create your professional profile to post a job"}
           </DialogTitle>
           <DialogDescription>
-            {lang === "fr" ? "Même compte, rien à refaire. Cela prend 1 minute." : "Use the same account. It only takes a minute."}
+            {lang === "fr" ? "Indiquez si vous publiez au nom d'une entreprise, d'une association ou comme particulier." : "Choose whether you are posting for a company, an association, or as an individual."}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-end">
@@ -45,7 +45,7 @@ export default function FenetrePublier({
             {lang === "fr" ? "Plus tard" : "Later"}
           </Button>
           <Button type="button" onClick={onCreateProfile}>
-            {lang === "fr" ? "Créer mon profil employeur" : "Create my employer profile"}
+            {lang === "fr" ? "Créer mon profil professionnel" : "Create my professional profile"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -6,5 +6,6 @@
  * UTILISÉ PAR     : app (route /messages).
  */
 export { default as MessagesView } from "./components/MessagesView";
-export { default } from "./components/MessagesView";export { useConversations } from "./hooks/useConversations";
+export { default } from "./components/MessagesView";
+export { useConversations } from "./hooks/useConversations";
 export { useMessages } from "./hooks/useMessages";

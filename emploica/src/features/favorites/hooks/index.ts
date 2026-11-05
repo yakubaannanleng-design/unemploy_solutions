@@ -1,8 +1,8 @@
 /**
- * PROBLÈME RÉSOLU : point d'entrée des hooks du module favorites (vide pour l'instant).
- * RESPONSABILITÉ  : expose les hooks favorites quand ils existeront.
- * NE FAIT PAS     : ne contient pas de logique aujourd'hui (NON UTILISÉ).
- * DÉPEND DE       : aucun.
- * UTILISÉ PAR     : aucun pour l'instant.
+ * PROBLÈME RÉSOLU : point d'entrée des hooks du module favorites.
+ * RESPONSABILITÉ  : expose le hook Supabase de suivi des offres enregistrées.
+ * NE FAIT PAS     : ne contient pas la logique d'accès à la base de données.
+ * DÉPEND DE       : useFavorites.
+ * UTILISÉ PAR     : features/favorites, features/jobs.
  */
-export {};
+export { useFavorites } from "./useFavorites";

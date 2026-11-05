@@ -30,13 +30,17 @@ export default function SettingsView() {
     setDark(v);
     if (v) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
-    try { window.localStorage.setItem("workca:theme", v ? "dark" : "light"); } catch {}
+    try { window.localStorage.setItem("workca:theme", v ? "dark" : "light"); } catch (error) {
+      console.error("Could not save theme preference:", error);
+    }
   };
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem("workca:theme");
       if (saved === "dark") { document.documentElement.classList.add("dark"); setDark(true); }
-    } catch {}
+    } catch (error) {
+      console.error("Could not load theme preference:", error);
+    }
   }, []);
 
   const myUser = state.users.find((u) => u.id === currentUser.id) ?? currentUser;
@@ -49,7 +53,7 @@ export default function SettingsView() {
     update("seekers", state.seekers.filter((s) => s.userId !== currentUser.id));
     update("employers", state.employers.filter((e) => e.userId !== currentUser.id));
     window.localStorage.removeItem("workca:me");
-    window.location.href = "/login";
+    window.location.href = `${import.meta.env.BASE_URL}login`;
   };
   const saveAccount = () => {
     update("users", state.users.map((u) =>
@@ -86,7 +90,9 @@ export default function SettingsView() {
   const [twoFaCode, setTwoFaCode] = useState("");
   const togglePref = (key: string, v: boolean, setter: (b: boolean) => void) => {
     setter(v);
-    try { window.localStorage.setItem(key, v ? "on" : "off"); } catch {}
+    try { window.localStorage.setItem(key, v ? "on" : "off"); } catch (error) {
+      console.error(`Could not save preference "${key}":`, error);
+    }
 
   };
 
@@ -234,7 +240,7 @@ export default function SettingsView() {
       </Card>
 
       <Separator />
-      <Button variant="destructive" onClick={() => { window.localStorage.removeItem("workca:me"); window.location.href = "/login"; }}>
+      <Button variant="destructive" onClick={() => { window.localStorage.removeItem("workca:me"); window.location.href = `${import.meta.env.BASE_URL}login`; }}>
         <LogOut className="h-4 w-4 mr-1" /> {t("logout", lang)}
       </Button>
     </div>

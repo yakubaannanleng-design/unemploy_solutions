@@ -6,27 +6,26 @@
  * UTILISÉ PAR     : App.tsx.
  */
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useLang, t } from "lib/i18n";
 import { useStore } from "lib/store";
-import { Button } from "components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "components/ui/sheet";
-import { Home, Briefcase, MessageSquare, User, MoreVertical, Settings, Heart, Bell, Zap, Shield, PlusCircle, LogOut, Search } from "lucide-react";
+import { Home, Briefcase, MessageSquare, User, MoreVertical, Settings, Heart, Bell, Zap, Shield, PlusCircle, Search } from "lucide-react";
+import type { User as UserType } from "@/types";
 
 interface BottomNavProps {
-  currentUser: any;
+  currentUser: UserType | null;
 }
 
 export default function BottomNav({ currentUser }: BottomNavProps) {
   const { lang } = useLang();
   const { state } = useStore();
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   if (!currentUser) return null;
 
   const unreadMsg = state.conversations.reduce(
-    (n: number, c: any) => n + c.messages.filter((m: any) => m.receiverId === currentUser.id && m.status !== "lu").length,
+    (n, c) => n + c.messages.filter((m) => m.receiverId === currentUser.id && m.status !== "lu").length,
     0
   );
 
@@ -50,7 +49,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
   return (
     <>
       {/* Barre inférieure (mobile) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur flex items-center justify-around h-14">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background flex items-center justify-around h-14">
         {items.map((it) => (
           <Link key={it.to} to={it.to} className="flex flex-col items-center justify-center flex-1 text-xs text-muted-foreground hover:text-primary relative min-h-[44px]">
             <it.icon className="h-5 w-5" />
@@ -77,7 +76,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
                   <span className="text-xs text-center">{it.label}</span>
                 </Link>
               ))}
-              <button onClick={() => { setOpen(false); window.localStorage.removeItem("workca:me"); window.location.href = "/login"; }} className="flex flex-col items-center gap-1 p-3 rounded-lg hover:bg-accent text-red-600">
+              <button onClick={() => { setOpen(false); window.localStorage.removeItem("workca:me"); window.location.href = `${import.meta.env.BASE_URL}login`; }} className="flex flex-col items-center gap-1 p-3 rounded-lg hover:bg-accent text-red-600">
                 <LogOut className="h-5 w-5" />
                 <span className="text-xs text-center">{t("logout", lang)}</span>
               </button>

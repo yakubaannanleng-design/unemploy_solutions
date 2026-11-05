@@ -1,7 +1,7 @@
 // PROBLÈME RÉSOLU : permet à l'employeur de consulter un candidat ayant postulé et de rendre une décision persistante.
 import { useMemo } from "react";
 import { ArrowLeft, FileText } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,19 @@ export default function DetailCandidat({ currentUser }: DetailCandidatProps) {
   const isOwner = currentUser.role === "employeur" && offer?.employerId === currentUser.id;
   const candidate = usersQuery.data?.find((item) => item.id === application?.seekerId);
   const seekerProfile = seekerProfilesQuery.data?.find((profile) => profile.userId === application?.seekerId);
+  const cvPath = application && seekerProfile?.cvUrl?.startsWith(`${application.seekerId}/`)
+    ? seekerProfile.cvUrl
+    : undefined;
+  const cvQuery = useQuery({
+    queryKey: ["candidateCvUrl", application?.seekerId, cvPath],
+    enabled: !!supabase && isOwner && !!cvPath,
+    queryFn: async () => {
+      if (!supabase || !cvPath) throw new Error("Le CV n'est pas disponible.");
+      const { data, error } = await supabase.storage.from("cvs").createSignedUrl(cvPath, 300);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+  });
 
   const decisionMutation = useMutation({
     mutationFn: async (status: Extract<ApplicationStatus, "retenue" | "refusée">) => {
@@ -101,7 +114,6 @@ export default function DetailCandidat({ currentUser }: DetailCandidatProps) {
     [seekerProfile?.skills],
   );
   const avatarUrl = safeHttpsUrl(seekerProfile?.photo);
-  const cvUrl = safeHttpsUrl(seekerProfile?.cvUrl);
   const candidateInitials = (candidate?.name ?? "?")
     .trim()
     .split(/\s+/)
@@ -189,10 +201,18 @@ export default function DetailCandidat({ currentUser }: DetailCandidatProps) {
       <Card>
         <CardContent className="flex items-center gap-3 p-4">
           <FileText className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          {cvUrl ? (
-            <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+          {cvQuery.data ? (
+            <a href={cvQuery.data} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
               {lang === "fr" ? "Voir le CV" : "View résumé"}
             </a>
+          ) : cvQuery.isLoading ? (
+            <p role="status" className="text-sm text-muted-foreground">
+              {lang === "fr" ? "Préparation du CV…" : "Preparing résumé…"}
+            </p>
+          ) : cvQuery.isError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {lang === "fr" ? "Impossible de préparer le lien sécurisé du CV." : "Could not prepare a secure résumé link."}
+            </p>
           ) : (
             <p className="text-sm text-muted-foreground">
               {lang === "fr" ? "Aucun CV transmis." : "No résumé provided."}

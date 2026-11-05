@@ -1,14 +1,13 @@
 // Gestionnaire d'état global de l'application avec persistance dans localStorage.
 // Contient les données des utilisateurs, offres, candidatures, conversations,
 // messages, notifications, signalements, transactions et formations.
-import { createContext, createElement, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type {
   Application,
   Conversation,
   EmployerProfile,
   FlashOffer,
-  Message,
   Notification,
   Offer,
   Rating,
@@ -53,6 +52,12 @@ interface StoreState {
   favorites: string[];
 }
 
+type IdListKey = {
+  [K in keyof StoreState]: StoreState[K] extends Array<{ id: string }> ? K : never
+}[keyof StoreState];
+
+type IdListItem<K extends IdListKey> = Extract<StoreState[K][number], { id: string }>;
+
 type StoreApi = ReturnType<typeof useStoreValue>;
 const StoreContext = createContext<StoreApi | null>(null);
 export type Workspace = "chercheur" | "employeur";
@@ -87,7 +92,12 @@ function load(): StoreState {
         // Migration : réinitialise l'état avec les nouvelles valeurs par défaut.
         return defaultState();
       }
-      return { ...defaultState(), ...parsed, version: STORE_VERSION };
+      return {
+        ...defaultState(),
+        ...parsed,
+        favorites: [], // Les favoris sont désormais synchronisés uniquement avec Supabase.
+        version: STORE_VERSION,
+      };
     }
   } catch {
     /* ignore */
@@ -106,24 +116,31 @@ function useStoreValue() {
     }
   }, [state]);
 
-  const update = <K extends keyof StoreState>(key: K, value: StoreState[K]) => {
+  const update = useCallback(<K extends keyof StoreState>(key: K, value: StoreState[K]) => {
     setState((prev) => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
-  const patch = <K extends keyof StoreState>(key: K, item: StoreState[K][number]) => {
+  const patch = useCallback(<K extends keyof StoreState>(key: K, item: StoreState[K][number]) => {
     setState((prev) => ({ ...prev, [key]: [...prev[key], item] } as StoreState));
-  };
+  }, []);
 
-  const replace = <K extends keyof StoreState>(key: K, value: StoreState[K][number]) => {
+  const replace = useCallback(<K extends IdListKey>(key: K, value: IdListItem<K>) => {
     setState((prev) => ({
       ...prev,
-      [key]: prev[key].map((x: any) => (x.id === value.id ? value : x)),
+      [key]: prev[key].map((item) => (item.id === value.id ? value : item)),
     }) as StoreState);
-  };
+  }, []);
 
-  const remove = <K extends keyof StoreState>(key: K, id: string) => {
-    setState((prev) => ({ ...prev, [key]: prev[key].filter((x: any) => x.id !== id) }) as StoreState);
-  };
+  const remove = useCallback(<K extends IdListKey>(key: K, id: string) => {
+    setState((prev) => ({ ...prev, [key]: prev[key].filter((item) => item.id !== id) }) as StoreState);
+  }, []);
+
+  const upsertUser = useCallback((user: User) => {
+    setState((prev) => ({
+      ...prev,
+      users: [...prev.users.filter((existing) => existing.id !== user.id), user],
+    }));
+  }, []);
 
   const me: User = useMemo(() => {
     const user = state.users.find((item) => item.id === state.currentUserId) ?? state.users[0];
@@ -137,9 +154,13 @@ function useStoreValue() {
     patch,
     replace,
     remove,
-    setCurrentUser: (id: string) => update("currentUserId", id),
-    setActiveSpace: (space: Workspace) =>
-      update("activeSpaces", { ...state.activeSpaces, [state.currentUserId]: space }),
+    setCurrentUser: useCallback((id: string) => update("currentUserId", id), [update]),
+    setActiveSpace: useCallback((space: Workspace) =>
+      setState((prev) => ({
+        ...prev,
+        activeSpaces: { ...prev.activeSpaces, [prev.currentUserId]: space },
+      })), []),
+    upsertUser,
     currentUser: me,
   };
 }

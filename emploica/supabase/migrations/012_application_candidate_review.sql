@@ -2,6 +2,33 @@ alter table public.seeker_profiles
   add column if not exists education text,
   add column if not exists cv_url text;
 
+update public.seeker_profiles
+set cv_url = substring(cv_url from '/storage/v1/object/public/cvs/(.*)$')
+where cv_url like '%/storage/v1/object/public/cvs/%';
+
+update storage.buckets
+set public = false
+where id = 'cvs';
+
+drop policy if exists "cvs_read_public" on storage.objects;
+drop policy if exists "cvs_read_owner_or_applicant_employer" on storage.objects;
+
+create policy "cvs_read_owner_or_applicant_employer"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'cvs'
+    and (
+      (storage.foldername(name))[1] = auth.uid()::text
+      or exists (
+        select 1
+        from public.applications as application
+        join public.offers as offer on offer.id = application.offer_id
+        where application.seeker_id = (storage.foldername(name))[1]
+          and offer.employer_id = auth.uid()::text
+      )
+    )
+  );
+
 drop policy if exists "seeker_profiles_select_public" on public.seeker_profiles;
 drop policy if exists "seeker_profiles_read_self" on public.seeker_profiles;
 drop policy if exists "seeker_read_self" on public.seeker_profiles;

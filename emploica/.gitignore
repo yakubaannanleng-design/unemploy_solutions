@@ -40,3 +40,7 @@ Thumbs.db
 # Misc
 .turbo/
 .cache/
+.vercel/
+
+# Supabase CLI local state
+supabase/.temp/

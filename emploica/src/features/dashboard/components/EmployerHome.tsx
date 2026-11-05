@@ -6,8 +6,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
-import { Separator } from "components/ui/separator";
-import { Briefcase, Users, Eye, MessageSquare, Banknote, Zap, BookOpen, Star } from "lucide-react";
+import { Briefcase, Users, Eye, Banknote, Zap } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 const EmployerCharts = lazy(() => import("./EmployerCharts"));
 import { OfferForm } from "features/jobs";
@@ -36,7 +35,7 @@ export default function EmployerHome() {
   }));
   const viewsData = myOffers.map((o) => ({ name: o.title.slice(0, 12), vues: o.views }));
 
-  const boost = (offer: any) => {
+  const boost = (offer: Offer) => {
     replace("offers", { ...offer, boost: true, views: offer.views + 50 });
     patch("transactions", {
       id: "tx-" + Math.random().toString(36).slice(2, 9),
@@ -46,7 +45,7 @@ export default function EmployerHome() {
       operator: "Orange Money",
       status: "réussi",
       createdAt: new Date().toISOString(),
-    } as any);
+    });
   };
   const updateApplicationStatus = (appId: string, status: "consultée" | "retenue" | "refusée") => {
     update("applications", state.applications.map((a) => (a.id === appId ? { ...a, status } : a)));
@@ -129,19 +128,23 @@ export default function EmployerHome() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold">{t("employer", lang)} â€” {currentUser.name}</h2>
+          <h2 className="text-xl font-semibold">{t("employer", lang)} — {currentUser.name}</h2>
           <p className="text-sm text-muted-foreground">
             {state.employers.find((e) => e.userId === currentUser.id)?.orgName ?? ""}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link to="/boulots-eclair">
-            <Button variant="outline" size="sm"><Zap className="h-4 w-4 mr-1" /> {t("flash", lang)}</Button>
+        <div className="grid w-full grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:w-auto">
+          <Link to="/boulots-eclair" className="min-w-0">
+            <Button variant="outline" size="sm" className="w-full whitespace-normal text-center leading-tight sm:w-auto">
+              <Zap className="h-4 w-4 shrink-0" /> {t("flash", lang)}
+            </Button>
           </Link>
-          <Link to="/offres/nouveau">
-            <Button>{t("createOffer", lang)}</Button>
+          <Link to="/offres/nouveau" className="min-w-0">
+            <Button className="w-full whitespace-normal text-center leading-tight sm:w-auto">
+              {t("createOffer", lang)}
+            </Button>
           </Link>
         </div>
       </div>
@@ -166,7 +169,7 @@ export default function EmployerHome() {
                   <div>
                     <div className="font-medium">{o.title}</div>
                     <div className="text-xs text-muted-foreground">
-                      {o.location.city} Â· {o.contract} Â· {o.views} {t("views", lang) ?? "vues"}
+                      {o.location.city} · {o.contract} · {o.views} {t("views", lang) ?? "vues"}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -219,7 +222,7 @@ export default function EmployerHome() {
                     <div>
                       <div className="font-medium">{seeker?.name ?? t("unknownUser", lang)}</div>
                       <div className="text-xs text-muted-foreground">
-                        {offer?.title} Â· {a.status}
+                        {offer?.title} · {a.status}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

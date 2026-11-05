@@ -26,7 +26,11 @@ try {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AppErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter
+        basename={import.meta.env.BASE_URL === "/"
+          ? "/"
+          : import.meta.env.BASE_URL.replace(/\/$/, "")}
+      >
         <QueryClientProvider client={queryClient}>
           <StoreProvider>
             <App />

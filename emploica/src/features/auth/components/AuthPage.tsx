@@ -1,148 +1,174 @@
-﻿// Page d'authentification de Workca (animée) — intégrée avec Supabase Auth.
 import { useState } from "react";
-import { useUsers } from "../hooks/useUsers";
 import type { User } from "@/types";
 import AuthAnimated from "./AuthAnimated";
-import { useLang } from "lib/i18n";
-import { supabase } from "lib/supabase";
+import { useLang } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase";
+import { resolveWorkcaUser } from "../utils/authProfile";
 
 interface AuthPageProps {
-  onLogin?: (u: User) => void;
+  initialMode?: "login" | "register";
+  onLogin?: (user: User) => void | Promise<void>;
 }
 
-export default function AuthPage({ onLogin }: AuthPageProps = {}) {
+export default function AuthPage({ initialMode = "login", onLogin }: AuthPageProps = {}) {
   const { lang } = useLang();
-  const { data: users = [] } = useUsers();
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [verificationEmail, setVerificationEmail] = useState("");
 
-  const handleLogin = async (values: { username: string; password: string }) => {
-    // Resoudre l'email a utiliser pour Supabase Auth
-    let emailToTry = values.username;
-    if (!values.username.includes("@")) {
-      const candidate = users.find(
-        (x) =>
-          x.name === values.username ||
-          x.phone === values.username ||
-          x.email === values.username
-      );
-      if (candidate?.email) emailToTry = candidate.email;
+  const handleLogin = async (values: { email: string; password: string }) => {
+    setError("");
+    setNotice("");
+    if (!supabase) {
+      setError(lang === "fr" ? "Le service de connexion est indisponible. Réessayez plus tard." : "Sign-in is unavailable. Please try again later.");
+      return;
     }
 
-    // 1) Tentative Supabase Auth (email)
-    let supabaseError: string | null = null;
-    if (supabase && emailToTry.includes("@")) {
-      try {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: emailToTry,
-          password: values.password,
-        });
-        if (!authError && data.user) {
-          let u = users.find((x) => x.email === emailToTry || x.id === data.user.id);
-          if (!u) {
-            u = {
-              id: data.user.id,
-              role: values.role ?? "chercheur",
-              name: data.user.user_metadata?.name ?? emailToTry.split("@")[0],
-              phone: data.user.user_metadata?.phone ?? "",
-              email: emailToTry,
-              passwordHash: "",
-              status: "actif",
-              verification: "déclaré",
-              createdAt: new Date().toISOString(),
-            };
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: values.email.trim(),
+        password: values.password,
+      });
+      if (authError) throw authError;
+      if (!data.user) throw new Error(lang === "fr" ? "Compte introuvable." : "Account not found.");
 
-          setError("");
-          onLogin?.(u);
-          return;
-        }
-        }
-        if (authError) supabaseError = authError.message;
-      } catch (e: Error) {
-        supabaseError = e.message ?? null;
+      const user = await resolveWorkcaUser(data.user);
+      if (user.status === "suspendu") {
+        await supabase.auth.signOut();
+        throw new Error(lang === "fr" ? "Ce compte est suspendu. Contactez l'assistance Workca." : "This account is suspended. Contact Workca support.");
       }
-    }
-
-    // 2) Fallback : comptes démo / locaux
-    const u = users.find(
-      (x) =>
-        (x.phone === values.username ||
-          x.email === values.username ||
-          x.name === values.username ||
-          x.email === emailToTry)
-    );
-    if (u) {
-      // Si un hash est stocké, il doit correspondre ; sinon (compte Supabase non confirmé) on laisse passer
-      if (u.passwordHash === "" || u.passwordHash === values.password) {
-        setError("");
-        onLogin?.(u);
+      await onLogin?.(user);
+    } catch (loginError) {
+      if (
+        loginError instanceof Error
+        && "code" in loginError
+        && loginError.code === "email_not_confirmed"
+      ) {
+        setVerificationEmail(values.email.trim().toLowerCase());
+        setNotice(lang === "fr"
+          ? "Cette adresse n'est pas encore confirmée. Saisissez le code reçu par email ou demandez-en un nouveau."
+          : "This email is not confirmed yet. Enter the code sent by email or request a new one.");
         return;
       }
+      setError(loginError instanceof Error
+        ? loginError.message
+        : lang === "fr" ? "Connexion impossible. Vérifiez vos identifiants et réessayez." : "Could not sign in. Check your credentials and try again.");
     }
-
-    const msg =
-      supabaseError && /confirm/i.test(supabaseError)
-        ? "Confirme ton email avant de te connecter (vérifie ta boîte mail), ou crée un compte."
-        : "Email ou mot de passe incorrect. Réessaie, ou crée un compte.";
-    setError(lang === "fr" ? msg : "Incorrect email or password. Try again, or create an account.");
   };
 
   const handleRegister = async (values: { username: string; email: string; password: string; role?: "chercheur" | "employeur" }) => {
+    setError("");
+    setNotice("");
     const username = values.username.trim();
-    const password = values.password;
-    if (!username || !password) {
-      setError("Veuillez remplir tous les champs.");
+    const email = values.email.trim().toLowerCase();
+    if (!username || !email || !values.password) {
+      setError(lang === "fr" ? "Indiquez votre nom, votre email et un mot de passe." : "Enter your name, email, and a password.");
       return;
     }
-    // 1) Supabase Auth
-    if (supabase) {
-      const email = values.email || `${username.replace(/\s+/g, "").toLowerCase()}@workca.local`;
-      try {
+    if (!supabase) {
+      setError(lang === "fr" ? "Le service d'inscription est indisponible. Réessayez plus tard." : "Sign-up is unavailable. Please try again later.");
+      return;
+    }
+
+    try {
       const { data, error: authError } = await supabase.auth.signUp({
         email,
-        password,
-        options: { data: { name: username } },
+        password: values.password,
+        options: {
+          data: { name: username, role: values.role ?? "chercheur" },
+        },
       });
-      if (!authError && data.user) {
-        const newUser: User = {
-          id: data.user.id,
-          role: values.role ?? "chercheur",
-          name: username,
-          phone: username.startsWith("+") ? username : "+237 " + username,
-          email,
-          passwordHash: "",
-          status: "actif",
-          verification: "déclaré",
-          createdAt: new Date().toISOString(),
-        };
-        setError("");
-        onLogin?.(newUser);
+      if (authError) throw authError;
+      if (!data.user) throw new Error(lang === "fr" ? "Le compte n'a pas pu être créé." : "The account could not be created.");
+      if (!data.session) {
+        setVerificationEmail(email);
+        setNotice(lang === "fr"
+          ? `Compte créé. Saisissez le code de vérification envoyé à ${email}.`
+          : `Account created. Enter the verification code sent to ${email}.`);
         return;
       }
-    } catch {
-      /* fallback local */
-    }
-    }
 
+      const user = await resolveWorkcaUser(data.user);
+      await onLogin?.(user);
+    } catch (registrationError) {
+      setError(registrationError instanceof Error
+        ? registrationError.message
+        : lang === "fr" ? "Inscription impossible. Vérifiez les informations et réessayez." : "Could not sign up. Check the information and try again.");
+    }
+  };
 
-    // 2) Fallback local
-    const newUser: User = {
-      id: "u-" + Math.random().toString(36).slice(2, 9),
-      role: values.role ?? "chercheur",
-      name: username,
-      phone: username.startsWith("+") ? username : "+237 " + username,
-      email: values.email || undefined,
-      passwordHash: "",
-      status: "actif",
-      verification: "déclaré",
-      createdAt: new Date().toISOString(),
-    };
+  const handleVerifyEmail = async (token: string) => {
     setError("");
-    onLogin?.(newUser);
+    setNotice("");
+    if (!supabase || !verificationEmail) {
+      setError(lang === "fr" ? "La vérification est indisponible. Réessayez plus tard." : "Verification is unavailable. Please try again later.");
+      return;
+    }
+    if (!/^\d{6}$/.test(token.trim())) {
+      setError(lang === "fr" ? "Saisissez le code à 6 chiffres reçu par email." : "Enter the 6-digit code sent by email.");
+      return;
+    }
+
+    try {
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        email: verificationEmail,
+        token: token.trim(),
+        type: "signup",
+      });
+      if (verifyError) throw verifyError;
+      if (!data.user) throw new Error(lang === "fr" ? "La vérification n'a pas abouti. Demandez un nouveau code." : "Verification failed. Request a new code.");
+      const user = await resolveWorkcaUser(data.user);
+      if (user.status === "suspendu") {
+        await supabase.auth.signOut();
+        throw new Error(lang === "fr" ? "Ce compte est suspendu. Contactez l'assistance Workca." : "This account is suspended. Contact Workca support.");
+      }
+      setVerificationEmail("");
+      await onLogin?.(user);
+    } catch (verificationError) {
+      setError(verificationError instanceof Error
+        ? verificationError.message
+        : lang === "fr" ? "Code invalide ou expiré. Vérifiez-le et réessayez." : "Invalid or expired code. Check it and try again.");
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    setError("");
+    setNotice("");
+    if (!supabase || !verificationEmail) {
+      setError(lang === "fr" ? "Impossible d'envoyer un nouveau code pour le moment." : "Could not send a new code right now.");
+      return;
+    }
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: verificationEmail,
+      });
+      if (resendError) throw resendError;
+      setNotice(lang === "fr" ? `Un nouveau code a été envoyé à ${verificationEmail}.` : `A new code was sent to ${verificationEmail}.`);
+    } catch (resendError) {
+      setError(resendError instanceof Error
+        ? resendError.message
+        : lang === "fr" ? "Impossible d'envoyer un nouveau code. Réessayez." : "Could not send a new code. Please try again.");
+    }
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <AuthAnimated onLogin={handleLogin} onRegister={handleRegister} error={error} />
+      <AuthAnimated
+        initialMode={initialMode}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        onVerifyEmail={handleVerifyEmail}
+        onResendConfirmation={handleResendConfirmation}
+        onCancelVerification={() => {
+          setVerificationEmail("");
+          setError("");
+          setNotice("");
+        }}
+        verificationEmail={verificationEmail}
+        error={error}
+        notice={notice}
+      />
     </div>
   );
 }

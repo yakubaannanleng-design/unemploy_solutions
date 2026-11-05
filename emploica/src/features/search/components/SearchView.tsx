@@ -1,8 +1,8 @@
 /**
  * PROBLÈME RÉSOLU : affiche la recherche globale (offres, utilisateurs, messages) et filtre les résultats.
- * RESPONSABILITÉ  : rendu de l'écran Recherche et filtrage local des données du store.
- * NE FAIT PAS     : ne parle pas à Supabase ; ne gère pas la création/modification de données.
- * DÉPEND DE       : lib/store, lib/i18n, components/offers/OfferCard, react-router-dom.
+ * RESPONSABILITÉ  : rend les résultats d'offres Supabase et filtre les utilisateurs/messages du store.
+ * NE FAIT PAS     : ne gère pas la création/modification des données.
+ * DÉPEND DE       : features/jobs/hooks/useOffers, lib/store, lib/i18n, components/offers/OfferCard.
  * UTILISÉ PAR     : app (route /recherche).
  */
 // Vue de recherche globale : offres, utilisateurs, messages.
@@ -13,11 +13,15 @@ import { Search, User } from "lucide-react";
 import { OfferCard } from "features/jobs";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { isCandidateOfferVisible } from "@/features/jobs/utils/filledOffers";
+import { useOffers } from "@/features/jobs/hooks/useOffers";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
 
 export default function SearchView() {
   const { lang } = useLang();
   const { state } = useStore();
   const navigate = useNavigate();
+  const offersQuery = useOffers();
   const [searchParams] = useSearchParams();
   const candidatesOnly = searchParams.get("type") === "candidats";
   const [q, setQ] = useState("");
@@ -29,7 +33,7 @@ export default function SearchView() {
 
   const ql = q.trim().toLowerCase();
   const offers = ql
-    ? state.offers.filter(
+    ? (offersQuery.data ?? []).filter(
         (o) =>
           isCandidateOfferVisible(o) &&
           (o.title.toLowerCase().includes(ql) ||
@@ -86,8 +90,31 @@ export default function SearchView() {
       </div>
 
       {tab === "offres" && (
-        offers.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{ql ? t("noResults", lang) : (lang === "fr" ? "Tapez pour rechercher." : "Type to search.")}</p>
+        offersQuery.isLoading ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            {lang === "fr" ? "Chargement des offres…" : "Loading jobs…"}
+          </p>
+        ) : !supabase ? (
+          <p role="alert" className="text-sm text-destructive">
+            {lang === "fr" ? "Connexion à Supabase indisponible." : "Supabase is unavailable."}
+          </p>
+        ) : offersQuery.isError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {offersQuery.error instanceof Error
+              ? offersQuery.error.message
+              : lang === "fr" ? "Impossible de charger les offres." : "Could not load jobs."}
+          </p>
+        ) : offers.length === 0 ? (
+          <div className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              {ql ? t("noResults", lang) : (lang === "fr" ? "Tapez pour rechercher." : "Type to search.")}
+            </p>
+            {ql && (
+              <Button type="button" variant="outline" onClick={() => navigate("/alertes?create=1")}>
+                {lang === "fr" ? "Créer une alerte" : "Create an alert"}
+              </Button>
+            )}
+          </div>
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
             {offers.map((o) => (

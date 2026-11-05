@@ -1,53 +1,74 @@
 ﻿// Composant principal de l'application Workca.
 // Gestion de la navigation, de l'authentification et du routage entre les pages.
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import type { User as SupabaseAuthUser } from "@supabase/supabase-js";
 import { useStore } from "./lib/store";
 import { toast } from "sonner";
 import { Skeleton } from "./components/ui/skeleton";
 import { Toaster } from "./components/ui/sonner";
-import { useLang, t } from "./lib/i18n";
+import { useLang } from "./lib/i18n";
 import { supabase } from "./lib/supabase";
 import Header from "./components/layout/Header";
 import AppRoutes from "./app/routes";
 import AppLayout from "./layouts/AppLayout";
-import type { User, Offer, Rating } from "./types";
+import type { Message, User } from "./types";
 import { DEMO_USERS } from "./data/mockData";
-
-const ChoixTypeCompte = lazy(() => import("./features/compte/components/ChoixTypeCompte"));
+import { resolveWorkcaUser } from "./features/auth/utils/authProfile";
 
 // Liste des routes qui nécessitent d'être connecté.
 export default function App() {
   const { lang } = useLang();
-  const { state, patch, replace, update, setCurrentUser, currentUser } = useStore();
+  const { state, update, upsertUser, setCurrentUser, currentUser } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAuthed, setIsAuthed] = useState<boolean>(
-    () => window.localStorage.getItem("workca:me") !== null
+    () => !supabase && window.localStorage.getItem("workca:me") !== null
   );
 
-  // Restaure l'utilisateur connecté depuis localStorage au chargement.
   useEffect(() => {
     if (supabase) {
-      // 1) Session Supabase
-      supabase.auth.getSession().then(({ data }) => {
+      let active = true;
+      const activateSession = async (authUser: SupabaseAuthUser) => {
+        try {
+          const user = await resolveWorkcaUser(authUser);
+          if (!active) return;
+          if (user.status === "suspendu") {
+            await supabase.auth.signOut();
+            throw new Error("Ce compte est suspendu. Contactez l'assistance Workca.");
+          }
+          upsertUser(user);
+          setCurrentUser(user.id);
+          window.localStorage.setItem("workca:me", user.id);
+          setIsAuthed(true);
+        } catch (error) {
+          if (!active) return;
+          window.localStorage.removeItem("workca:me");
+          setIsAuthed(false);
+          toast.error(error instanceof Error ? error.message : "Impossible de charger votre compte.");
+        }
+      };
+
+      void supabase.auth.getSession().then(({ data, error }) => {
+        if (error) throw error;
         if (data.session?.user) {
-          setCurrentUser(data.session.user.id);
-          setIsAuthed(true);
-        } else {
-          const saved = window.localStorage.getItem("workca:me");
-          if (saved) { setCurrentUser(saved); setIsAuthed(true); }
+          return activateSession(data.session.user);
         }
+        window.localStorage.removeItem("workca:me");
+        setIsAuthed(false);
+      }).catch((error: unknown) => {
+        if (!active) return;
+        setIsAuthed(false);
+        toast.error(error instanceof Error ? error.message : "Impossible de restaurer votre session.");
       });
+
       const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-          setCurrentUser(session.user.id);
-          setIsAuthed(true);
-          window.localStorage.setItem("workca:me", session.user.id);
-        }
+        if (session) return;
+        window.localStorage.removeItem("workca:me");
+        setIsAuthed(false);
       });
-      // 2) Chargement des donnees depuis Supabase
-       (async () => {
+
+      (async () => {
          try {
             const [{ data: offers }, { data: applications }, { data: conversations }, { data: messages }, { data: notifications }, { data: users }, { data: seekerProfiles }, { data: employerProfiles }] = await Promise.all([
               supabase.from("offers").select("*"),
@@ -60,7 +81,7 @@ export default function App() {
               supabase.from("employer_profiles").select("*"),
             ]);
            if (offers && offers.length > 0) {
-             const mapped = offers.map((o: any) => ({
+             const mapped = offers.map((o) => ({
                id: o.id,
                employerId: o.employer_id,
                title: o.title,
@@ -89,7 +110,7 @@ export default function App() {
              update("offers", mapped);
            }
            if (applications && applications.length > 0) {
-             const mapped = applications.map((a: any) => ({
+             const mapped = applications.map((a) => ({
                id: a.id,
                offerId: a.offer_id,
                seekerId: a.seeker_id,
@@ -99,8 +120,8 @@ export default function App() {
              update("applications", mapped);
            }
            if (conversations && conversations.length > 0) {
-             const msgsByConv: Record<string, any[]> = {};
-             (messages ?? []).forEach((m: any) => {
+             const msgsByConv: Record<string, Message[]> = {};
+             (messages ?? []).forEach((m) => {
                if (!msgsByConv[m.conversation_id]) msgsByConv[m.conversation_id] = [];
                msgsByConv[m.conversation_id].push({
                  id: m.id,
@@ -111,7 +132,7 @@ export default function App() {
                  status: m.status,
                });
              });
-             const mapped = conversations.map((c: any) => ({
+             const mapped = conversations.map((c) => ({
                id: c.id,
                participants: c.participants,
                messages: msgsByConv[c.id] ?? [],
@@ -119,7 +140,7 @@ export default function App() {
              update("conversations", mapped);
            }
            if (notifications && notifications.length > 0) {
-             const mapped = notifications.map((n: any) => ({
+             const mapped = notifications.map((n) => ({
                id: n.id,
                userId: n.user_id,
                type: n.type,
@@ -130,7 +151,7 @@ export default function App() {
              update("notifications", mapped);
            }
             if (users && users.length > 0) {
-              const mapped = users.map((u: any) => ({
+              const mapped = users.map((u) => ({
                 id: u.id,
                 role: u.role,
                 name: u.name,
@@ -144,7 +165,7 @@ export default function App() {
               update("users", mapped);
             }
             if (seekerProfiles && seekerProfiles.length > 0) {
-              const mapped = seekerProfiles.map((s: any) => ({
+              const mapped = seekerProfiles.map((s) => ({
                 userId: s.user_id,
                 bio: s.bio ?? "",
                 skills: s.skills ?? [],
@@ -165,7 +186,7 @@ export default function App() {
               update("seekers", mapped);
             }
             if (employerProfiles && employerProfiles.length > 0) {
-              const mapped = employerProfiles.map((e: any) => ({
+              const mapped = employerProfiles.map((e) => ({
                 userId: e.user_id,
                 orgName: e.org_name,
                 description: e.description ?? "",
@@ -185,53 +206,42 @@ export default function App() {
            console.error("Supabase load error:", e);
          }
        })();
-      return () => sub.subscription.unsubscribe();
+      return () => {
+        active = false;
+        sub.subscription.unsubscribe();
+      };
     } else {
       const saved = window.localStorage.getItem("workca:me");
       if (saved) { setCurrentUser(saved); setIsAuthed(true); }
     }
-  }, []);
+  }, [setCurrentUser, update, upsertUser]);
 
-  const login = (user: User) => {
-    update("users", [...state.users.filter((existing) => existing.id !== user.id), user]);
+  const login = async (user: User) => {
+    if (supabase) {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (!data.session?.user || data.session.user.id !== user.id) {
+        throw new Error("La session n'est pas valide. Reconnectez-vous.");
+      }
+      user = await resolveWorkcaUser(data.session.user);
+      if (user.status === "suspendu") {
+        await supabase.auth.signOut();
+        throw new Error("Ce compte est suspendu. Contactez l'assistance Workca.");
+      }
+    }
+    upsertUser(user);
     setCurrentUser(user.id);
     window.localStorage.setItem("workca:me", user.id);
     setIsAuthed(true);
     navigate("/" + user.role);
-    if (supabase) {
-      void (async () => {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-        if (sessionData.session?.user.id !== user.id) return;
-
-        const { data: existing, error: readError } = await supabase
-          .from("users")
-          .select("id")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (readError) throw readError;
-        if (existing) return;
-
-        const { error: insertError } = await supabase.from("users").insert({
-          id: user.id,
-          role: user.role,
-          name: user.name,
-          phone: user.phone,
-          email: user.email,
-          password_hash: "",
-          status: "actif",
-          verification: "declare",
-          created_at: user.createdAt,
-        });
-        if (insertError) throw insertError;
-      })().catch((error: unknown) => {
-        toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer le compte.");
-      });
-    }
   };
 
   const logout = () => {
-    if (supabase) supabase.auth.signOut();
+    if (supabase) {
+      void supabase.auth.signOut().then(({ error }) => {
+        if (error) toast.error(error.message);
+      });
+    }
     window.localStorage.removeItem("workca:me");
     setIsAuthed(false);
     navigate("/login");
@@ -242,45 +252,11 @@ export default function App() {
     if (u) login(u);
   };
 
-  const boostOffer = (offer: Offer) => {
-    const boosted: Offer = { ...offer, boost: true, views: offer.views + 50 };
-    replace("offers", boosted);
-    patch("transactions", {
-      id: "tx-" + Math.random().toString(36).slice(2, 9),
-      userId: offer.employerId,
-      type: "boost",
-      amount: 500,
-      operator: "Orange Money",
-      status: "réussi",
-      createdAt: new Date().toISOString(),
-    });
-  };
-
-  const addRating = (r: Omit<Rating, "id">) => {
-    patch("ratings", { ...r, id: "rt-" + Math.random().toString(36).slice(2, 9) } as Rating);
-  };
-
   // Si l'utilisateur est connecté et arrive sur la page d'accueil ou /login,
   // on le redirige vers son tableau de bord selon son rôle.
   if (isAuthed && currentUser && (location.pathname === "/" || location.pathname === "/login")) {
     return <Navigate to={"/" + currentUser.role} replace />;
   }
-  if (
-    isAuthed &&
-    currentUser &&
-    currentUser.role !== "admin" &&
-    !Object.prototype.hasOwnProperty.call(state.activeSpaces, currentUser.id)
-  ) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Suspense fallback={<div className="min-h-screen" />}>
-          <ChoixTypeCompte />
-        </Suspense>
-        <Toaster />
-      </div>
-    );
-  }
-
   const pageContent = (
     <>
       <main id="main-content" className="container px-4 py-6">
@@ -288,14 +264,6 @@ export default function App() {
           <AppRoutes onLogin={login} />
         </Suspense>
       </main>
-      <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        <div className="container px-4">
-          <div>{t("antiScam", lang)} {"·"} {"©"} {new Date().getFullYear()} MADI OUMAROU YAKUBA {"—"} Workca</div>
-          <div className="mt-1">
-            <a href="mailto:yakubaannanleng@gmail.com" className="hover:underline">yakubaannanleng@gmail.com</a> {"·"} <a href="tel:+237694073533" className="hover:underline">+237 694-073-533</a> {"·"} <a href="https://wa.me/237672069569" target="_blank" rel="noreferrer" className="hover:underline">WhatsApp +237 672-069-569</a>
-          </div>
-        </div>
-      </footer>
     </>
   );
 

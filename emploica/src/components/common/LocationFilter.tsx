@@ -5,7 +5,6 @@
  * DÉPEND DE       : lib/i18n, @/data/locations, components/ui/select.
  * UTILISÉ PAR     : features/jobs, features/search.
  */
-import { MapPin } from "lucide-react";
 import { regions, cities, quartiers } from "@/data/locations";
 import { useLang, t } from "lib/i18n";
 import {

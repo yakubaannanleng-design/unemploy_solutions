@@ -7,12 +7,13 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useStore } from "lib/store";
 import { supabase } from "lib/supabase";
 import { useLang, t } from "lib/i18n";
 import { useOffers, filterOffers } from "../hooks/useOffers";
+import { useFavorites } from "@/features/favorites/hooks";
 import { useEmployerProfiles } from "features/employers/hooks/useEmployerProfiles";
 import { useUserApplications } from "features/applications/hooks/useApplications";
 import { HOME_CATEGORIES, matchesHomeCategory } from "@/features/categories/categories";
@@ -21,6 +22,7 @@ import FiltresOffres from "./FiltresOffres";
 import PanneauFiltres from "./PanneauFiltres";
 import { DEFAULT_OFFER_FILTERS, type CompleteOfferFilters } from "../utils/offerFilters";
 import { isCandidateOfferVisible } from "../utils/filledOffers";
+import BanniereCanaux from "@/features/canaux/BanniereCanaux";
 import ListeOffres from "./ListeOffres";
 import OfferDetailModal from "./OfferDetailModal";
 import RatingModal from "features/ratings";
@@ -41,34 +43,7 @@ export default function OffersView() {
   const offersQuery = useOffers();
   const employerProfilesQuery = useEmployerProfiles();
   const applicationsQuery = useUserApplications(currentUser.id);
-  const favoritesQuery = useQuery({
-    queryKey: ["favorites", currentUser.id],
-    enabled: !!supabase,
-    queryFn: async () => {
-      if (!supabase) throw new Error("Supabase n'est pas configuré.");
-      const { data, error } = await supabase
-        .from("favorites")
-        .select("offer_id")
-        .eq("user_id", currentUser.id);
-      if (error) throw error;
-      return (data ?? []).map((favorite) => favorite.offer_id);
-    },
-  });
-  const saveFavorite = useMutation({
-    mutationFn: async ({ offerId: id, saved }: { offerId: string; saved: boolean }) => {
-      if (!supabase) throw new Error("Supabase n'est pas configuré.");
-      const result = saved
-        ? await supabase.from("favorites").delete().eq("user_id", currentUser.id).eq("offer_id", id)
-        : await supabase.from("favorites").insert({ user_id: currentUser.id, offer_id: id });
-      if (result.error) throw result.error;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["favorites", currentUser.id] });
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Impossible de modifier les favoris.");
-    },
-  });
+  const favorites = useFavorites(currentUser.id);
 
   useEffect(() => {
     if (!offerId) return;
@@ -170,24 +145,13 @@ export default function OffersView() {
 
   const isEmployer = currentUser.role === "employeur";
   const contactEmployer = (offer: Offer) => {
-    const otherId = offer.employerId;
-    let conv = state.conversations.find(
-      (c) => c.participants.includes(currentUser.id) && c.participants.includes(otherId)
-    );
-    if (!conv) {
-      conv = {
-        id: "conv-" + Math.random().toString(36).slice(2, 9),
-        participants: [currentUser.id, otherId],
-        messages: [],
-      };
-      patch("conversations", conv);
-    }
-    navigate("/messages", { state: { conversationId: conv.id } });
+    navigate("/messages", { state: { otherId: offer.employerId } });
   };
 
   return (
     <div className="space-y-4">
       <header className="space-y-4">
+        {!mineOnly && <BanniereCanaux />}
         <h1 className="text-2xl font-semibold">
           {mineOnly ? lang === "fr" ? "Mes offres" : "My jobs" : t("offers", lang)}
         </h1>
@@ -213,7 +177,7 @@ export default function OffersView() {
           offer,
           employerName: employerNames.get(offer.employerId) ?? "",
         }))}
-        savedIds={new Set(favoritesQuery.data ?? [])}
+        savedIds={new Set(favorites.savedIds)}
         loading={offersQuery.isLoading}
         error={
           !supabase
@@ -226,16 +190,15 @@ export default function OffersView() {
                 : lang === "fr" ? "Impossible de charger les offres." : "Could not load jobs."
               : employerProfilesQuery.isError
                 ? lang === "fr" ? "Impossible de charger les entreprises." : "Could not load companies."
-                : favoritesQuery.isError
-                  ? lang === "fr" ? "Impossible de charger vos offres enregistrées." : "Could not load saved jobs."
+                : favorites.error
+                  ? favorites.error instanceof Error
+                    ? favorites.error.message
+                    : lang === "fr" ? "Impossible de charger vos offres enregistrées." : "Could not load saved jobs."
                   : undefined
         }
         onOpen={setSelected}
         onToggleSaved={(offer) =>
-          saveFavorite.mutate({
-            offerId: offer.id,
-            saved: (favoritesQuery.data ?? []).includes(offer.id),
-          })
+          favorites.toggle(offer.id)
         }
       />
 
@@ -255,7 +218,6 @@ export default function OffersView() {
       <RatingModal
         open={ratingOpen}
         onOpenChange={setRatingOpen}
-        targetId={selected?.employerId ?? ""}
         targetName={state.users.find((u) => u.id === selected?.employerId)?.name ?? ""}
         role="employeur"
         onSubmit={rate}

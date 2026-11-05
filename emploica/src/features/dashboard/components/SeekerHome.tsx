@@ -8,9 +8,10 @@ import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Separator } from "components/ui/separator";
 import { Link, useNavigate } from "react-router-dom";
-import { MessageSquare, Briefcase, MapPin, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { categoryById } from "@/data/categories";
 import { getIcon } from "lib/iconMap";
+import type { Offer } from "@/types";
 
 export default function SeekerHome() {
   const { lang } = useLang();
@@ -128,8 +129,7 @@ export default function SeekerHome() {
   );
 }
 
-function OfferPreview({ offer }: { offer: any }) {
-  const { lang } = useLang();
+function OfferPreview({ offer }: { offer: Offer }) {
   const cat = categoryById(offer.category);
   const Icon = getIcon(cat?.icon ?? "briefcase");
   return (

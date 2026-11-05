@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   users: [] as User[],
   profiles: [] as SeekerProfile[],
   rpc: vi.fn(),
+  createSignedUrl: vi.fn(),
 }));
 
 vi.mock("@/features/applications/hooks/useApplications", () => ({
@@ -31,7 +32,12 @@ vi.mock("@/features/seekers/hooks/useSeekerProfiles", () => ({
 }));
 
 vi.mock("@/lib/supabase", () => ({
-  supabase: { rpc: mocks.rpc },
+  supabase: {
+    rpc: mocks.rpc,
+    storage: {
+      from: () => ({ createSignedUrl: mocks.createSignedUrl }),
+    },
+  },
 }));
 
 const employer: User = {
@@ -93,12 +99,17 @@ function resetMocks() {
     radiusKm: 10,
     experience: "",
     education: "Licence en informatique",
-    cvUrl: "https://storage.example/candidate/cv.pdf",
+    cvUrl: `${candidate.id}/cv.pdf`,
     languages: [],
     missionsDone: 0,
   }];
   mocks.rpc.mockReset();
   mocks.rpc.mockResolvedValue({ data: true, error: null });
+  mocks.createSignedUrl.mockReset();
+  mocks.createSignedUrl.mockResolvedValue({
+    data: { signedUrl: "https://storage.example/signed/cv.pdf" },
+    error: null,
+  });
 }
 
 function renderCandidate() {
@@ -126,9 +137,9 @@ describe("Détail candidat côté employeur", () => {
 
     expect(screen.getByRole("heading", { name: "Aïcha N." })).toBeInTheDocument();
     expect(screen.getByText("React")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Voir le CV" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Voir le CV" })).toHaveAttribute(
       "href",
-      "https://storage.example/candidate/cv.pdf",
+      "https://storage.example/signed/cv.pdf",
     );
     fireEvent.click(screen.getByRole("button", { name: "Convoquer" }));
 

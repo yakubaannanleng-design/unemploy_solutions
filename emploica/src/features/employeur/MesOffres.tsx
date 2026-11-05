@@ -7,6 +7,7 @@ import { useApplications } from "@/features/applications/hooks/useApplications";
 import { useEmployerProfiles } from "@/features/employers/hooks/useEmployerProfiles";
 import { useOffers } from "@/features/jobs/hooks/useOffers";
 import { isOfferExpired } from "@/features/jobs/utils/filledOffers";
+import { publishTelegramOffer } from "@/features/canaux/utils/publishTelegramOffer";
 import { supabase } from "@/lib/supabase";
 import { useLang } from "@/lib/i18n";
 import type { Offer, User } from "@/types";
@@ -68,6 +69,20 @@ export default function MesOffres({ currentUser }: MesOffresProps) {
       toast.error(error instanceof Error ? error.message : lang === "fr" ? "Impossible de clôturer cette offre." : "Could not close this job.");
     },
   });
+  const publishTelegram = useMutation({
+    mutationFn: (offer: Offer) => publishTelegramOffer(offer.id),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ["offers"] });
+      toast.success(result.already_published
+        ? lang === "fr" ? "Cette offre est déjà publiée sur Telegram." : "This job is already published on Telegram."
+        : lang === "fr" ? "L'offre a été publiée sur Telegram." : "The job was published on Telegram.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error
+        ? error.message
+        : lang === "fr" ? "Impossible de publier l'offre sur Telegram." : "Could not publish the job on Telegram.");
+    },
+  });
 
   useEffect(() => {
     if (supabase) triggerExpiration();
@@ -107,6 +122,24 @@ export default function MesOffres({ currentUser }: MesOffresProps) {
     }
   };
 
+  const copyOfferMessage = async (offer: Offer) => {
+    const message = [
+      offer.title,
+      companyName,
+      [offer.location.city, offer.location.region].filter(Boolean).join(" · "),
+      offer.pay,
+      offer.description,
+      `${window.location.origin}/offres/${encodeURIComponent(offer.id)}`,
+    ].filter(Boolean).join("\n");
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success(lang === "fr" ? "Message copié." : "Message copied.");
+    } catch (copyError) {
+      console.error("Could not copy the job message:", copyError);
+      toast.error(lang === "fr" ? "Impossible de copier le message sur cet appareil." : "Could not copy the message on this device.");
+    }
+  };
+
   if (loading) {
     return <p role="status" className="py-10 text-center text-muted-foreground">
       {lang === "fr" ? "Chargement de vos offres…" : "Loading your jobs…"}
@@ -127,7 +160,7 @@ export default function MesOffres({ currentUser }: MesOffresProps) {
 
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
-      <div role="tablist" aria-label={lang === "fr" ? "Filtrer mes offres" : "Filter my jobs"} className="flex gap-2 overflow-x-auto">
+      <div role="tablist" aria-label={lang === "fr" ? "Filtrer mes offres" : "Filter my jobs"} className="flex flex-wrap gap-2">
         {([
           ["active", lang === "fr" ? "Actives" : "Active"],
           ["filled", lang === "fr" ? "Pourvues" : "Filled"],
@@ -139,7 +172,7 @@ export default function MesOffres({ currentUser }: MesOffresProps) {
             role="tab"
             aria-selected={tab === value}
             onClick={() => setTab(value)}
-            className={`min-h-11 shrink-0 rounded-full px-4 text-sm ${
+            className={`min-h-11 rounded-full px-4 text-sm ${
               tab === value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             }`}
           >
@@ -173,6 +206,9 @@ export default function MesOffres({ currentUser }: MesOffresProps) {
               lang={lang}
               onMarkFilled={setOfferToFill}
               onCopyFilledMessage={copyFilledMessage}
+              onCopyOfferMessage={copyOfferMessage}
+              onPublishTelegram={(selectedOffer) => publishTelegram.mutate(selectedOffer)}
+              telegramPending={publishTelegram.isPending}
             />
           ))}
         </div>

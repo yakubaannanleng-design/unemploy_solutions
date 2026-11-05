@@ -29,8 +29,9 @@ export default function FiltresOffres({ value, onChange }: FiltresOffresProps) {
 
   return (
     <div
+      role="group"
       aria-label={lang === "fr" ? "Filtres rapides des offres" : "Quick job filters"}
-      className="flex gap-2 overflow-x-auto pb-1"
+      className="flex flex-wrap gap-2 pb-1"
     >
       {filters.map((filter) => {
         const active = value.city === filter.city && value.contract === filter.contract;
@@ -40,7 +41,7 @@ export default function FiltresOffres({ value, onChange }: FiltresOffresProps) {
             type="button"
             aria-pressed={active}
             onClick={() => onChange({ city: filter.city, contract: filter.contract })}
-            className={`shrink-0 rounded-full border px-4 py-2 text-sm transition-colors ${
+            className={`min-h-10 whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-colors ${
               active
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-background text-foreground hover:border-primary/50"

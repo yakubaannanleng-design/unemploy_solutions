@@ -26,7 +26,7 @@ export default function FiltresStatut({ value, counts, onChange }: FiltresStatut
     <div
       role="group"
       aria-label={lang === "fr" ? "Filtrer par statut" : "Filter by status"}
-      className="flex gap-2 overflow-x-auto pb-1"
+      className="flex flex-wrap gap-2 pb-1"
     >
       {APPLICATION_STATUS_FILTERS.map((filter) => (
         <button

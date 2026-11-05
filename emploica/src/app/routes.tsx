@@ -32,11 +32,14 @@ const NotificationsView = lazy(() => import("features/notifications"));
 const FlashOffersView = lazy(() => import("features/jobs").then((m) => ({ default: m.FlashOffersView })));
 const SettingsView = lazy(() => import("features/settings"));
 const FavoritesView = lazy(() => import("features/favorites"));
+const PageAlertes = lazy(() => import("../features/alertes"));
+const PageCanaux = lazy(() => import("../features/canaux"));
 const SearchView = lazy(() => import("features/search"));
 const TermsView = lazy(() => import("features/legal").then((m) => ({ default: m.TermsView })));
 const PrivacyView = lazy(() => import("features/legal").then((m) => ({ default: m.PrivacyView })));
 const LicensesView = lazy(() => import("features/legal").then((m) => ({ default: m.LicensesView })));
 const AuthPage = lazy(() => import("features/auth"));
+const ResetPasswordPage = lazy(() => import("../features/auth/components/ResetPasswordPage"));
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthed = window.localStorage.getItem("workca:me") !== null;
@@ -73,12 +76,14 @@ function RequireEmployerProfile({ children }: { children: JSX.Element }) {
   return children;
 }
 
-export default function AppRoutes({ onLogin }: { onLogin: (user: User) => void }) {
+export default function AppRoutes({ onLogin }: { onLogin: (user: User) => void | Promise<void> }) {
   const { currentUser } = useStore();
 
   return (
     <Routes>
-      <Route path="/login" element={<AuthPage onLogin={onLogin} />} />
+      <Route path="/" element={<AuthPage initialMode="register" onLogin={onLogin} />} />
+      <Route path="/login" element={<AuthPage initialMode="login" onLogin={onLogin} />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route
         path="/entreprises/:id"
         element={
@@ -211,7 +216,7 @@ export default function AppRoutes({ onLogin }: { onLogin: (user: User) => void }
         path="/notifications"
         element={
           <RequireAuth>
-            <NotificationsView />
+            <NotificationsView userId={currentUser.id} />
           </RequireAuth>
         }
       />
@@ -239,7 +244,23 @@ export default function AppRoutes({ onLogin }: { onLogin: (user: User) => void }
           </RequireAuth>
         }
       />
-      <Route path="/auth" element={<AuthPage />} />
+      <Route
+        path="/alertes"
+        element={
+          <RequireAuth>
+            <PageAlertes />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/canaux"
+        element={
+          <RequireAuth>
+            <PageCanaux />
+          </RequireAuth>
+        }
+      />
+      <Route path="/auth" element={<AuthPage initialMode="login" />} />
       <Route path="/recherche" element={<SearchView />} />
       <Route path="/conditions" element={<TermsView />} />
       <Route path="/confidentialite" element={<PrivacyView />} />

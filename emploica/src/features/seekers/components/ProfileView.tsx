@@ -7,7 +7,7 @@
  * NOTE            : composant MIXTE (chercheur + employeur) — À SCINDER PLUS TARD : la branche employeur devra migrer vers features/employers.
  */
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
 import { Link } from "react-router-dom";
@@ -35,6 +35,17 @@ export default function ProfileView() {
   const seeker = seekerProfilesQuery.data?.find((profile) => profile.userId === mine);
   const emp = state.employers.find((e) => e.userId === mine);
   const [uploading, setUploading] = useState(false);
+  const cvPath = seeker?.cvUrl?.startsWith(`${mine}/`) ? seeker.cvUrl : undefined;
+  const cvQuery = useQuery({
+    queryKey: ["seekerCvUrl", mine, cvPath],
+    enabled: !!supabase && !isEmployer && !!cvPath,
+    queryFn: async () => {
+      if (!supabase || !cvPath) throw new Error("Le CV n'est pas disponible.");
+      const { data, error } = await supabase.storage.from("cvs").createSignedUrl(cvPath, 300);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+  });
   const profileMutation = useMutation({
     mutationFn: async (profile: SeekerProfile) => {
       if (!supabase) throw new Error(lang === "fr" ? "Connexion à Supabase indisponible." : "Supabase is unavailable.");
@@ -152,14 +163,14 @@ export default function ProfileView() {
       const path = `${currentUser.id}/cv.pdf`;
       const { error: upErr } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
-      const { data } = supabase.storage.from("cvs").getPublicUrl(path);
       const { error: profileError } = await supabase
         .from("seeker_profiles")
-        .update({ cv_url: data.publicUrl })
+        .update({ cv_url: path })
         .eq("user_id", currentUser.id);
       if (profileError) throw profileError;
-      update("seekers", [...state.seekers.filter((item) => item.userId !== mine), { ...seeker, cvUrl: data.publicUrl }]);
+      update("seekers", [...state.seekers.filter((item) => item.userId !== mine), { ...seeker, cvUrl: path }]);
       await queryClient.invalidateQueries({ queryKey: ["seekerProfiles"] });
+      await queryClient.invalidateQueries({ queryKey: ["seekerCvUrl", mine] });
       toast.success(lang === "fr" ? "CV téléversé." : "CV uploaded.");
     } catch (err: unknown) {
       toast.error(err instanceof Error
@@ -263,14 +274,16 @@ export default function ProfileView() {
   const cat = categoryById(seeker.categories[0]);
   const recommended = TRAININGS.filter((tr) => seeker.categories.includes(tr.category)).slice(0, 3);
   const shareProfile = () => {
-    const profileUrl = `${window.location.origin}/profil`;
     const shareText = [
-      currentUser.name,
+      lang === "fr" ? `Profil Workca : ${currentUser.name}` : `Workca profile: ${currentUser.name}`,
       seeker.education,
       seeker.zone.city,
-      seeker.skills.join(", "),
-      profileUrl,
-    ].filter(Boolean).join(" · ");
+      seeker.skills.length > 0
+        ? `${lang === "fr" ? "Compétences" : "Skills"} : ${seeker.skills.join(", ")}`
+        : "",
+      seeker.experience,
+      seeker.bio,
+    ].filter(Boolean).join("\n");
     window.open(
       `https://wa.me/?text=${encodeURIComponent(shareText)}`,
       "_blank",
@@ -382,9 +395,14 @@ export default function ProfileView() {
                {seeker.experience || <span className="text-muted-foreground italic">{lang === "fr" ? "Non renseigné" : "Not specified"} <button className="text-primary hover:underline ml-1" onClick={() => setEditing(true)}>{lang === "fr" ? "Ajouter" : "Add"}</button></span>}
              </div>
              {seeker.education && <div><span className="text-muted-foreground">{lang === "fr" ? "Formation" : "Education"} : </span>{seeker.education}</div>}
-             {seeker.cvUrl && (
+             {seeker.cvUrl && cvQuery.isError && (
+               <p role="alert" className="text-sm text-destructive">
+                 {lang === "fr" ? "Impossible de préparer le lien sécurisé du CV." : "Could not prepare a secure résumé link."}
+               </p>
+             )}
+             {seeker.cvUrl && cvQuery.data && (
                <div>
-                 <a href={seeker.cvUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                 <a href={cvQuery.data} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                    {lang === "fr" ? "Télécharger le CV" : "Download CV"}
                  </a>
                </div>
@@ -409,6 +427,13 @@ export default function ProfileView() {
                 </span>
               )}
             </div>
+            <Link
+              to="/favoris"
+              className="flex items-center justify-between rounded-lg border p-3 font-medium hover:bg-accent"
+            >
+              <span>{lang === "fr" ? "Offres enregistrées" : "Saved jobs"}</span>
+              <span aria-hidden="true">›</span>
+            </Link>
         </CardContent>
       </Card>
 

@@ -8,10 +8,11 @@ import PublicationOffre from "../features/employeur/publication/PublicationOffre
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
   insert: vi.fn(),
+  invoke: vi.fn(),
 }));
 
 vi.mock("../lib/supabase", () => ({
-  supabase: { from: mocks.from },
+  supabase: { from: mocks.from, functions: { invoke: mocks.invoke } },
 }));
 
 function renderWizard() {
@@ -34,6 +35,7 @@ describe("PublicationOffre", () => {
     window.HTMLElement.prototype.scrollIntoView = () => {};
     mocks.from.mockClear();
     mocks.insert.mockClear();
+    mocks.invoke.mockClear();
     mocks.insert.mockResolvedValue({ error: null });
     mocks.from.mockReturnValue({ insert: mocks.insert });
   });
@@ -67,6 +69,7 @@ describe("PublicationOffre", () => {
       share_telegram: true,
       status: "en-attente",
     }));
+    expect(mocks.invoke).not.toHaveBeenCalled();
   });
 
   it("empêche de continuer sans renseigner les champs obligatoires du poste", () => {

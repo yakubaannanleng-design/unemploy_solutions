@@ -9,18 +9,17 @@ import { useState } from "react";
 import { Star } from "lucide-react";
 import { useLang, t } from "lib/i18n";
 import { Button } from "components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog";
 
 interface RatingModalProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  targetId: string;
   targetName: string;
   role: "employeur" | "chercheur";
   onSubmit: (score: number, comment: string) => void;
 }
 
-export default function RatingModal({ open, onOpenChange, targetId, targetName, role, onSubmit }: RatingModalProps) {
+export default function RatingModal({ open, onOpenChange, targetName, role, onSubmit }: RatingModalProps) {
   const { lang } = useLang();
   const [score, setScore] = useState(0);
   const [hover, setHover] = useState(0);
@@ -41,6 +40,7 @@ export default function RatingModal({ open, onOpenChange, targetId, targetName, 
           <DialogTitle>
             {role === "employeur" ? t("rateEmployer", lang) : (lang === "fr" ? "Évaluer le travailleur" : "Rate the worker")}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground">{targetName}</p>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-center gap-1">

@@ -12,10 +12,10 @@ export default function BoutonNouvelleOffre({ label, onClick }: BoutonNouvelleOf
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="relative -top-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="flex h-full min-h-11 w-full flex-col items-center justify-center gap-0.5 text-[11px] text-primary transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
     >
-      <Plus className="h-6 w-6" aria-hidden="true" />
-      <span className="sr-only">{label}</span>
+      <Plus className="h-5 w-5" aria-hidden="true" />
+      <span>{label}</span>
     </button>
   );
 }

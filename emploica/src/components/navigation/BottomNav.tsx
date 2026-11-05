@@ -6,12 +6,13 @@
  * UTILISÉ PAR     : layouts/AppLayout.
  */
 import { useState } from "react";
-import { BriefcaseBusiness, FileText, Home, MessageCircle, Plus } from "lucide-react";
+import { BriefcaseBusiness, FileText, Home, MessageCircle } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLang, t } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { useEmployerProfiles } from "@/features/employers/hooks/useEmployerProfiles";
+import { useConversations } from "@/features/messaging/hooks/useConversations";
 import FenetrePublier from "@/features/compte/components/FenetrePublier";
 import BoutonNouvelleOffre from "@/features/employeur/components/BoutonNouvelleOffre";
 import type { User } from "@/types";
@@ -26,16 +27,15 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const employerProfilesQuery = useEmployerProfiles();
+  const conversationsQuery = useConversations(currentUser.id);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
 
   if (currentUser.role === "admin") return null;
 
-  const unreadMessages = state.conversations.reduce(
-    (count, conversation) =>
-      count +
-      conversation.messages.filter(
-        (message) => message.receiverId === currentUser.id && message.status !== "lu",
-      ).length,
+  const unreadMessages = (conversationsQuery.data ?? []).reduce(
+    (count, conversation) => count + conversation.messages.filter(
+      (message) => message.receiverId === currentUser.id && message.status !== "lu",
+    ).length,
     0,
   );
   const isEmployer = currentUser.role === "employeur";
@@ -81,7 +81,11 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
     <>
       <nav
         aria-label={lang === "fr" ? "Navigation principale" : "Main navigation"}
-        className="fixed inset-x-0 bottom-0 z-50 grid h-16 grid-cols-5 border-t bg-background/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background"
+        style={{
+          height: "calc(4rem + env(safe-area-inset-bottom, 0px))",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
       >
         {items.slice(0, 2).map((item) => {
           const Icon = item.icon;
@@ -105,18 +109,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
             </Link>
           );
         })}
-        {isEmployer ? (
-          <BoutonNouvelleOffre label={t("publish", lang)} onClick={handlePublish} />
-        ) : (
-          <button
-            type="button"
-            onClick={handlePublish}
-            className="flex min-h-11 flex-col items-center justify-center gap-0.5 text-[11px] text-primary transition-opacity hover:opacity-80"
-          >
-            <Plus className="h-5 w-5" aria-hidden="true" />
-            <span>{t("publish", lang)}</span>
-          </button>
-        )}
+        <BoutonNouvelleOffre label={t("publish", lang)} onClick={handlePublish} />
         {items.slice(2).map((item) => {
           const Icon = item.icon;
           const active = isActive(item.to);
@@ -140,7 +133,10 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
           );
         })}
       </nav>
-      <div aria-hidden="true" className="h-16" />
+      <div
+        aria-hidden="true"
+        style={{ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
+      />
       <FenetrePublier
         open={publishDialogOpen}
         onOpenChange={setPublishDialogOpen}

@@ -46,8 +46,21 @@ Suivi de la restructuration par domaines.
 - [x] étape 11 — page publique d'entreprise, liens depuis les offres et suivi Supabase
 - [x] étape 13 — suivi des candidatures Supabase, filtres de statut et liens vers les offres
 - [x] étape 24 — fiche candidat depuis les candidatures récentes, revue sécurisée et CV lié au profil
+- [x] étape 17 — édition Supabase du profil, téléversement CV privé et lien de partage WhatsApp
+- [x] étape 12 — offres enregistrées synchronisées avec Supabase depuis la liste et la page Favoris
+- [x] étape 14 — alertes emploi synchronisées avec Supabase, accès menu/cloche et création depuis une recherche sans résultat
+- [x] étape 15 — notifications Supabase, éléments visuels par type, lecture persistante et badge de non-lues sur la cloche
+- [x] étape 16 — liste des conversations, messages persistants Supabase, recherche, envoi et compteurs de non-lus
+- [x] étape 18 — partie A : page Nos canaux, cartes configurables, bannière des offres et entrée dans le menu
+- [x] étape 18 — partie B : fonction Edge Telegram, publication après approbation Supabase et partage WhatsApp manuel
 - [ ] appliquer la migration `011_employer_follows.sql` au projet Supabase
 - [ ] appliquer la migration `012_application_candidate_review.sql` au projet Supabase
+- [ ] appliquer la migration `013_job_alerts.sql` au projet Supabase
+- [ ] appliquer la migration `014_notification_read_status.sql` au projet Supabase
+- [ ] appliquer la migration `015_message_read_status.sql` au projet Supabase
+- [ ] appliquer la migration `016_secure_offer_review_and_telegram.sql` au projet Supabase
+- [ ] configurer les secrets Edge Function Telegram et déployer `publier-telegram`
+- [ ] renseigner les liens publics WhatsApp et Telegram dans `src/config/canaux.ts`
 
 ## Vérifications (dernier domaine : phase 7, morceau 1 routes — commit `4b6188d`)
 - Build : ✅

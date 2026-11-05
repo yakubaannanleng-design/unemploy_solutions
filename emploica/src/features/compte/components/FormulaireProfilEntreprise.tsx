@@ -8,10 +8,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployerProfiles } from "@/features/employers/hooks/useEmployerProfiles";
 import useTypeCompte from "@/features/compte/hooks/useTypeCompte";
 import { useLang } from "@/lib/i18n";
@@ -21,6 +23,7 @@ import type { EmployerProfile } from "@/types";
 
 interface CompanyFields {
   orgName: string;
+  orgType: EmployerProfile["orgType"];
   sector: string;
   city: string;
   description: string;
@@ -38,6 +41,7 @@ export default function FormulaireProfilEntreprise() {
   const existing = profilesQuery.data?.find((profile) => profile.userId === currentUser.id);
   const [fields, setFields] = useState<CompanyFields>({
     orgName: existing?.orgName ?? "",
+    orgType: existing?.orgType ?? "entreprise",
     sector: existing?.sector ?? "",
     city: existing?.city ?? "",
     description: existing?.description ?? "",
@@ -47,6 +51,7 @@ export default function FormulaireProfilEntreprise() {
     if (!existing) return;
     setFields({
       orgName: existing.orgName,
+      orgType: existing.orgType,
       sector: existing.sector ?? "",
       city: existing.city ?? "",
       description: existing.description,
@@ -63,13 +68,20 @@ export default function FormulaireProfilEntreprise() {
       const { error } = await supabase.from("employer_profiles").upsert({
         user_id: currentUser.id,
         org_name: values.orgName.trim(),
-        org_type: "entreprise",
+        org_type: values.orgType,
         sector: values.sector.trim(),
         city: values.city.trim(),
         description: values.description.trim(),
         logo_url: values.logoUrl.trim() || null,
       }, { onConflict: "user_id" });
       if (error) throw error;
+      const { data, error: savedProfileError } = await supabase
+        .from("employer_profiles")
+        .select("user_id")
+        .eq("user_id", currentUser.id)
+        .single();
+      if (savedProfileError) throw savedProfileError;
+      if (!data) throw new Error(lang === "fr" ? "Le profil n'a pas été confirmé par la base de données." : "The profile could not be verified in the database.");
       return values;
     },
     onSuccess: async (values) => {
@@ -80,7 +92,7 @@ export default function FormulaireProfilEntreprise() {
         city: values.city.trim(),
         description: values.description.trim(),
         logoUrl: values.logoUrl.trim() || undefined,
-        orgType: "entreprise",
+        orgType: values.orgType,
         verification: existing?.verification ?? "déclaré",
         verifiedAt: existing?.verifiedAt,
         verificationRequested: existing?.verificationRequested,
@@ -96,7 +108,13 @@ export default function FormulaireProfilEntreprise() {
       ]);
       await queryClient.invalidateQueries({ queryKey: ["employerProfiles"] });
       selectSpace("employeur");
+      toast.success(lang === "fr" ? "Profil de l'entreprise enregistré avec succès." : "Company profile saved successfully.");
       navigate(destination, { replace: true });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error
+        ? error.message
+        : lang === "fr" ? "Impossible d'enregistrer le profil de l'entreprise." : "Could not save the company profile.");
     },
   });
 
@@ -105,21 +123,36 @@ export default function FormulaireProfilEntreprise() {
     saveProfile.mutate(fields);
   };
 
-  const updateField = (field: keyof CompanyFields, value: string) => {
+  const updateField = <K extends keyof CompanyFields>(field: K, value: CompanyFields[K]) => {
     setFields((previous) => ({ ...previous, [field]: value }));
   };
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-xl space-y-5">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">{lang === "fr" ? "Profil de l'entreprise" : "Company profile"}</h1>
+        <h1 className="text-2xl font-semibold">{lang === "fr" ? "Profil professionnel" : "Professional profile"}</h1>
         <p className="text-sm text-muted-foreground">
-          {lang === "fr" ? "Ces informations seront visibles sur vos offres." : "This information will appear on your job posts."}
+          {lang === "fr" ? "Ce profil présente la personne ou la structure qui publie les offres." : "This profile identifies the person or organization posting jobs."}
         </p>
       </header>
 
       <div className="space-y-2">
-        <Label htmlFor="company-name">{lang === "fr" ? "Nom de l'entreprise" : "Company name"}</Label>
+        <Label htmlFor="company-type">{lang === "fr" ? "Qui publie les offres ?" : "Who is posting jobs?"}</Label>
+        <Select value={fields.orgType} onValueChange={(orgType) => updateField("orgType", orgType as EmployerProfile["orgType"])}>
+          <SelectTrigger id="company-type"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="entreprise">{lang === "fr" ? "Une entreprise" : "A company"}</SelectItem>
+            <SelectItem value="particulier">{lang === "fr" ? "Un particulier" : "An individual"}</SelectItem>
+            <SelectItem value="association">{lang === "fr" ? "Une association" : "An association"}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="company-name">{fields.orgType === "entreprise"
+          ? lang === "fr" ? "Nom de l'entreprise" : "Company name"
+          : fields.orgType === "association"
+            ? lang === "fr" ? "Nom de l'association" : "Association name"
+            : lang === "fr" ? "Nom du recruteur ou de l'activité" : "Recruiter or business name"}</Label>
         <Input id="company-name" value={fields.orgName} onChange={(event) => updateField("orgName", event.target.value)} required maxLength={120} />
       </div>
       <div className="space-y-2">

@@ -47,12 +47,16 @@ export default function OfferCard({ offer, onClick, onApply, alreadyApplied, isF
             type="button"
             onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
             className="p-1 rounded-full hover:bg-accent"
-            aria-label="favorite"
+            aria-label={
+              lang === "fr"
+                ? isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
+                : isFavorite ? "Remove from saved jobs" : "Save job"
+            }
           >
             <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
           </button>
         )}
-        {(offer as any).verification === "vérifié" && ( // TODO: type Offer sans champ verification
+        {"verification" in offer && offer.verification === "vérifié" && (
           <Badge variant="secondary" className="text-xs">{t("verifiedEmployer", lang)}</Badge>
         )}
       </div>

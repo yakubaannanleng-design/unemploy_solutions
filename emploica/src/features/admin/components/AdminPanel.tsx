@@ -1,25 +1,89 @@
 // Composant de l interface utilisateur
 import { useStore } from "lib/store";
 import { useLang, t } from "lib/i18n";
-import { Badge } from "components/ui/badge";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
-import { Separator } from "components/ui/separator";
-import { Link } from "react-router-dom";
-import { User, Building2, ShieldCheck, MessageSquare } from "lucide-react";
-import { categoryById } from "@/data/categories";
+import { User, Building2, ShieldCheck } from "lucide-react";
+import { Navigate } from "react-router-dom";
+import { useUsers } from "@/features/auth/hooks/useUsers";
+import { useOffers } from "@/features/jobs/hooks/useOffers";
+import { publishTelegramOffer } from "@/features/canaux/utils/publishTelegramOffer";
+import { supabase } from "@/lib/supabase";
+import type { Offer } from "@/types";
 
 export default function AdminPanel() {
   const { lang } = useLang();
-  const { state, update, replace, remove } = useStore();
+  const { state, update, patch } = useStore();
+  const queryClient = useQueryClient();
+  const usersQuery = useUsers();
+  const offersQuery = useOffers();
+  const offers = supabase ? (offersQuery.data ?? []) : state.offers;
+  const signedInUser = (supabase ? usersQuery.data : state.users)
+    ?.find((user) => user.id === state.currentUserId);
 
-  const pendingOffers = state.offers.filter((o) => o.status === "en-attente");
+  const pendingOffers = offers.filter((o) => o.status === "en-attente");
   const pendingReports = state.signalements.filter((s) => s.status === "en-attente");
 
-  const approve = (id: string) =>
-    update("offers", state.offers.map((o) => (o.id === id ? { ...o, status: "publiée" } : o)));
-  const reject = (id: string) =>
-    update("offers", state.offers.map((o) => (o.id === id ? { ...o, status: "clôturée" } : o)));
+  const reviewOffer = useMutation({
+    mutationFn: async ({ offer, approved }: { offer: Offer; approved: boolean }) => {
+      if (!supabase) {
+        throw new Error(lang === "fr" ? "Connexion à Supabase indisponible." : "Supabase is unavailable.");
+      }
+      const { data, error } = await supabase.rpc("review_offer", {
+        p_offer_id: offer.id,
+        p_approved: approved,
+      });
+      if (error) throw error;
+      if (data !== true) {
+        throw new Error(lang === "fr"
+          ? "Cette offre n'est plus en attente de validation."
+          : "This job is no longer awaiting review.");
+      }
+
+      let telegramError: string | undefined;
+      if (approved && offer.shareTelegram) {
+        try {
+          await publishTelegramOffer(offer.id);
+        } catch (error) {
+          telegramError = error instanceof Error ? error.message : String(error);
+        }
+      }
+      return { offer, approved, telegramError };
+    },
+    onSuccess: async ({ offer, approved, telegramError }) => {
+      const status = approved ? "publiée" : "clôturée";
+      update("offers", state.offers.map((item) => item.id === offer.id ? { ...item, status } : item));
+      await queryClient.invalidateQueries({ queryKey: ["offers"] });
+      if (telegramError) {
+        toast.error(lang === "fr"
+          ? `Offre approuvée, mais publication Telegram échouée : ${telegramError}`
+          : `Job approved, but Telegram publishing failed: ${telegramError}`);
+      } else {
+        toast.success(approved
+          ? offer.shareTelegram
+            ? lang === "fr" ? "L'offre a été approuvée et publiée sur Telegram." : "The job was approved and published on Telegram."
+            : lang === "fr" ? "L'offre a été approuvée." : "The job was approved."
+          : lang === "fr" ? "L'offre a été refusée." : "The job was rejected.");
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error
+        ? error.message
+        : lang === "fr" ? "Impossible d'enregistrer la décision." : "Could not save the review decision.");
+    },
+  });
+
+  if (supabase && usersQuery.isLoading) {
+    return <p role="status" className="py-10 text-center text-muted-foreground">
+      {lang === "fr" ? "Vérification des droits…" : "Checking permissions…"}
+    </p>;
+  }
+  if (signedInUser?.role !== "admin") return <Navigate to="/offres" replace />;
+
+  const approve = (offer: Offer) => reviewOffer.mutate({ offer, approved: true });
+  const reject = (offer: Offer) => reviewOffer.mutate({ offer, approved: false });
   const blockUser = (id: string) =>
     update("users", state.users.map((u) => (u.id === id ? { ...u, status: "suspendu" } : u)));
   const resolveReport = (id: string) =>
@@ -53,10 +117,16 @@ export default function AdminPanel() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{state.users.length}</div><div className="text-xs text-muted-foreground">{t("users", lang)}</div></CardContent></Card>
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{state.offers.length}</div><div className="text-xs text-muted-foreground">{t("offers", lang)}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{offers.length}</div><div className="text-xs text-muted-foreground">{t("offers", lang)}</div></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-brand-600">{pendingOffers.length}</div><div className="text-xs text-muted-foreground">{t("moderation", lang)}</div></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-red-600">{pendingReports.length}</div><div className="text-xs text-muted-foreground">{t("reports", lang)}</div></CardContent></Card>
       </div>
+
+      {supabase && offersQuery.isError && (
+        <p role="alert" className="text-sm text-destructive">
+          {lang === "fr" ? "Impossible de charger les offres à modérer." : "Could not load jobs for review."}
+        </p>
+      )}
 
       <Card>
         <CardHeader><CardTitle>{t("moderation", lang)} — {t("offers", lang)}</CardTitle></CardHeader>
@@ -77,8 +147,8 @@ export default function AdminPanel() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => approve(o.id)}>{t("approve", lang)}</Button>
-                        <Button size="sm" variant="outline" onClick={() => reject(o.id)}>{t("reject", lang)}</Button>
+                        <Button size="sm" disabled={reviewOffer.isPending} onClick={() => approve(o)}>{t("approve", lang)}</Button>
+                        <Button size="sm" variant="outline" disabled={reviewOffer.isPending} onClick={() => reject(o)}>{t("reject", lang)}</Button>
                       </div>
                     </div>
                   </div>

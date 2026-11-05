@@ -7,6 +7,7 @@ import dns from "node:dns";
 dns.setDefaultResultOrder("verbatim");
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS === "true" ? "/unemploy_solutions/" : "/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

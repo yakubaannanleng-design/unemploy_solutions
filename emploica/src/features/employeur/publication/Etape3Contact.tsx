@@ -92,8 +92,8 @@ export default function Etape3Contact({ draft, update }: Etape3ContactProps) {
           <p className="mt-1 text-sm text-muted-foreground">
             {draft.shareTelegram
               ? lang === "fr"
-                ? "Le partage sera disponible après la configuration du canal Telegram."
-                : "Sharing will be available after the Telegram channel is configured."
+                ? "L'offre sera publiée sur Telegram après validation."
+                : "The job will be published on Telegram after approval."
               : lang === "fr" ? "Votre offre sera publiée dans Workca." : "Your job will be published on Workca."}
           </p>
         </div>
