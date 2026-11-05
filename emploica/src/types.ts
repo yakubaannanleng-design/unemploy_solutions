@@ -14,7 +14,9 @@ export type ContractType =
 
 export type ApplicationStatus = "envoyée" | "consultée" | "retenue" | "refusée" | "retirée";
 
-export type OfferStatus = "brouillon" | "en-attente" | "publiée" | "clôturée";
+export type OfferStatus = "brouillon" | "en-attente" | "publiée" | "clôturée" | "expirée";
+
+export type OfferContactMode = "profil" | "whatsapp" | "appel";
 
 export type MessageStatus = "envoyé" | "lu";
 
@@ -70,6 +72,9 @@ export interface EmployerProfile {
   userId: string;
   orgName: string;
   description: string;
+  sector?: string;
+  city?: string;
+  logoUrl?: string;
   orgType: "entreprise" | "particulier" | "association";
   verification: VerificationLevel;
   verifiedAt?: string;
@@ -96,6 +101,16 @@ export interface Offer {
   status: OfferStatus;
   boost: boolean;
   views: number;
+  educationLevel?: string;
+  experienceLevel?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  contactMode?: OfferContactMode;
+  contactPhone?: string;
+  shareTelegram?: boolean;
+  telegramMessageId?: string;
+  isFilled?: boolean;
+  filledAt?: string;
   imageUrl?: string;
   documentUrl?: string;
 }

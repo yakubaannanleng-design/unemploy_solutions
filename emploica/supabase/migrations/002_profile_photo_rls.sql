@@ -2,17 +2,17 @@
 -- A executer dans Supabase > SQL Editor > New query.
 -- Ne desactive pas le RLS : on ajoute des politiques.
 
--- 1) Buckets Storage (publics pour affichage des avatars/CV)
+-- 1) Buckets Storage (avatars publics, CV prives)
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
 insert into storage.buckets (id, name, public)
-values ('cvs', 'cvs', true)
-on conflict (id) do nothing;
+values ('cvs', 'cvs', false)
+on conflict (id) do update
+set public = excluded.public;
 
--- 2) RLS sur storage.objects (deja active par defaut, on s'assure)
-alter table storage.objects enable row level security;
+-- Supabase gere le RLS de storage.objects; ne pas modifier la table systeme.
 
 -- Nettoyage d'anciennes politiques (optionnel, ignore si absentes)
 drop policy if exists "avatars_read_public" on storage.objects;
@@ -42,11 +42,7 @@ create policy "avatars_delete_own"
   on storage.objects for delete to authenticated
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 
--- CV : lecture publique, ecriture uniquement dans son dossier
-create policy "cvs_read_public"
-  on storage.objects for select
-  using (bucket_id = 'cvs');
-
+-- CV : ecriture uniquement dans son dossier; la lecture est geree par la migration 012.
 create policy "cvs_insert_own"
   on storage.objects for insert to authenticated
   with check (bucket_id = 'cvs' and (storage.foldername(name))[1] = auth.uid()::text);

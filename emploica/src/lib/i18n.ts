@@ -8,6 +8,7 @@ const dict: Record<string, Record<Lang, string>> = {
   tagline: { fr: "Trouvez un emploi, publiez un besoin — au Cameroun.", en: "Find a job, post a need — in Cameroon." },
   home: { fr: "Accueil", en: "Home" },
   offers: { fr: "Offres", en: "Offers" },
+  applications: { fr: "Candidatures", en: "Applications" },
   profile: { fr: "Profil", en: "Profile" },
   messages: { fr: "Messages", en: "Messages" },
   admin: { fr: "Administration", en: "Administration" },

@@ -1,0 +1,250 @@
+// Composant de l interface utilisateur
+import { useStore } from "lib/store";
+import { supabase } from "lib/supabase";
+import { useLang, t } from "lib/i18n";
+import { Link } from "react-router-dom";
+import { Badge } from "components/ui/badge";
+import { Button } from "components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Briefcase, Users, Eye, Banknote, Zap } from "lucide-react";
+import { lazy, Suspense, useState } from "react";
+const EmployerCharts = lazy(() => import("./EmployerCharts"));
+import { OfferForm } from "features/jobs";
+import type { Offer } from "@/types";
+
+export default function EmployerHome() {
+  const { lang } = useLang();
+  const { state, patch, replace, update, currentUser } = useStore();
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+  const myOffers = state.offers.filter((o) => o.employerId === currentUser.id);
+  const myApps = state.applications.filter((a) =>
+    myOffers.some((o) => o.id === a.offerId)
+  );
+
+  const totalViews = myOffers.reduce((s, o) => s + o.views, 0);
+  const totalBoosts = state.transactions.filter((t) => t.type === "boost" && t.userId === currentUser.id).length;
+
+  // Données pour les graphiques du tableau de bord.
+  const appsByStatus = ["envoyée", "consultée", "retenue", "refusée"].map((st) => ({
+    name: st,
+    value: myApps.filter((a) => a.status === st).length,
+  }));
+  const offersByStatus = ["publiée", "en-attente", "clôturée"].map((st) => ({
+    name: st,
+    value: myOffers.filter((o) => o.status === st).length,
+  }));
+  const viewsData = myOffers.map((o) => ({ name: o.title.slice(0, 12), vues: o.views }));
+
+  const boost = (offer: Offer) => {
+    replace("offers", { ...offer, boost: true, views: offer.views + 50 });
+    patch("transactions", {
+      id: "tx-" + Math.random().toString(36).slice(2, 9),
+      userId: currentUser.id,
+      type: "boost",
+      amount: 500,
+      operator: "Orange Money",
+      status: "réussi",
+      createdAt: new Date().toISOString(),
+    });
+  };
+  const updateApplicationStatus = (appId: string, status: "consultée" | "retenue" | "refusée") => {
+    update("applications", state.applications.map((a) => (a.id === appId ? { ...a, status } : a)));
+    const app = state.applications.find((a) => a.id === appId);
+    if (app) {
+      patch("notifications", {
+        id: "notif-" + Math.random().toString(36).slice(2, 9),
+        userId: app.seekerId,
+        type: "candidature",
+        body:
+          status === "retenue"
+            ? `Votre candidature a été retenue par ${currentUser.name}.`
+            : status === "refusée"
+            ? `Votre candidature a été refusée par ${currentUser.name}.`
+            : `Votre candidature a été consultée par ${currentUser.name}.`,
+        createdAt: new Date().toISOString(),
+        read: false,
+      });
+    if (app && supabase) {
+      supabase.from("applications").update({ status }).eq("id", appId).then(({ error }) => {
+        if (error) console.error("Supabase update application error:", error);
+      });
+      supabase.from("notifications").insert({
+        id: "notif-" + Math.random().toString(36).slice(2, 9),
+        user_id: app.seekerId,
+        type: "candidature",
+        body:
+          status === "retenue"
+            ? `Votre candidature a été retenue par ${currentUser.name}.`
+            : status === "refusée"
+            ? `Votre candidature a été refusée par ${currentUser.name}.`
+            : `Votre candidature a été consultée par ${currentUser.name}.`,
+        created_at: new Date().toISOString(),
+        read: false,
+      }).then(({ error }) => {
+        if (error) console.error("Supabase insert notification error:", error);
+      });
+    }
+
+    }
+  };
+
+
+
+  const deleteOffer = (id: string) => {
+    if (!window.confirm(lang === "fr" ? "Supprimer cette offre ?" : "Delete this offer?")) return;
+    update("offers", state.offers.filter((o) => o.id !== id));
+    update("applications", state.applications.filter((a) => a.offerId !== id));
+  };
+
+  const saveEdit = (data: Omit<Offer, "id">) => {
+    if (!editingOffer) return;
+    update("offers", state.offers.map((o) => (o.id === editingOffer.id ? { ...data, id: editingOffer.id } : o)));
+    setEditingOffer(null);
+  };
+
+
+  if (editingOffer) {
+    return (
+      <div className="space-y-4">
+      <div className="rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 p-6 text-white shadow-lg flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-bold mb-1">{lang === "fr" ? "Publiez une offre" : "Post a job"}</h3>
+          <p className="text-sm opacity-90">{lang === "fr" ? "Trouvez le bon candidat près de chez vous." : "Find the right candidate near you."}</p>
+        </div>
+        <Link to="/offres/nouveau">
+          <Button variant="secondary">{lang === "fr" ? "Publier" : "Post"}</Button>
+        </Link>
+      </div>
+        <h2 className="text-xl font-semibold">{lang === "fr" ? "Modifier l'offre" : "Edit offer"}</h2>
+        <OfferForm
+          initial={editingOffer}
+          onSubmit={saveEdit}
+          onCancel={() => setEditingOffer(null)}
+        />
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">{t("employer", lang)} — {currentUser.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            {state.employers.find((e) => e.userId === currentUser.id)?.orgName ?? ""}
+          </p>
+        </div>
+        <div className="grid w-full grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:w-auto">
+          <Link to="/boulots-eclair" className="min-w-0">
+            <Button variant="outline" size="sm" className="w-full whitespace-normal text-center leading-tight sm:w-auto">
+              <Zap className="h-4 w-4 shrink-0" /> {t("flash", lang)}
+            </Button>
+          </Link>
+          <Link to="/offres/nouveau" className="min-w-0">
+            <Button className="w-full whitespace-normal text-center leading-tight sm:w-auto">
+              {t("createOffer", lang)}
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{myOffers.length}</div><div className="text-xs text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" /> {t("offers", lang)}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{myApps.length}</div><div className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> {t("applications", lang) ?? "Candidatures"}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{totalViews}</div><div className="text-xs text-muted-foreground flex items-center gap-1"><Eye className="h-3 w-3" /> {t("views", lang) ?? "Vues"}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-brand-600">{totalBoosts}</div><div className="text-xs text-muted-foreground flex items-center gap-1"><Zap className="h-3 w-3" /> {t("boost", lang)}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">0</div><div className="text-xs text-muted-foreground flex items-center gap-1"><Banknote className="h-3 w-3" /> {t("transactions", lang) ?? "Transactions"}</div></CardContent></Card>
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle>{t("offers", lang)}</CardTitle></CardHeader>
+        <CardContent>
+          {myOffers.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t("noResults", lang)}</p>
+          ) : (
+            <div className="space-y-2">
+              {myOffers.map((o) => (
+                <div key={o.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div>
+                    <div className="font-medium">{o.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {o.location.city} · {o.contract} · {o.views} {t("views", lang) ?? "vues"}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        o.status === "publiée" ? "default" : o.status === "en-attente" ? "secondary" : "outline"
+                      }
+                    >
+                      {t("status" + o.status.charAt(0).toUpperCase() + o.status.slice(1), lang) ?? o.status}
+                    </Badge>
+                    <Button size="sm" variant="outline" onClick={() => setEditingOffer(o)}>
+                      {t("edit", lang)}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-red-600" onClick={() => deleteOffer(o.id)}>
+                      {t("delete", lang)}
+                    </Button>
+                    {!o.boost && (
+                      <Button size="sm" variant="secondary" onClick={() => boost(o)}>
+                        <Zap className="h-3 w-3 mr-1" /> {t("boost", lang)}
+                      </Button>
+                    )}
+                    {o.boost && <Badge variant="default">{t("boostDone", lang)}</Badge>}
+                    <Link to={`/offres/${o.id}`}>
+                      <Button variant="ghost" size="sm">{t("review", lang)}</Button>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <Suspense fallback={<div className="text-center py-10 text-muted-foreground">Chargement...</div>}>
+        <EmployerCharts appsByStatus={appsByStatus} offersByStatus={offersByStatus} viewsData={viewsData} />
+      </Suspense>
+
+
+      <Card>
+        <CardHeader><CardTitle>{t("applications", lang) ?? "Candidatures reçues"}</CardTitle></CardHeader>
+        <CardContent>
+          {myApps.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t("noResults", lang)}</p>
+          ) : (
+            <div className="space-y-2">
+              {myApps.map((a) => {
+                const seeker = state.users.find((u) => u.id === a.seekerId);
+                const offer = state.offers.find((o) => o.id === a.offerId);
+                return (
+                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <div className="font-medium">{seeker?.name ?? t("unknownUser", lang)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {offer?.title} · {a.status}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "consultée")}>
+                        {t("markRead", lang) ?? "Consultée"}
+                      </Button>
+                      <Button size="sm" onClick={() => updateApplicationStatus(a.id, "retenue")}>
+                        {t("approve", lang)}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => updateApplicationStatus(a.id, "refusée")}>
+                        {t("reject", lang)}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
+    </div>
+  );
+}

@@ -1,6 +1,10 @@
-// Composant de capture d'erreurs (Error Boundary) pour Workca.
-// Intercepte les erreurs de rendu dans les composants enfants et affiche un message
-// d'erreur lisible avec un bouton pour recharger la page.
+/**
+ * PROBLÈME RÉSOLU : capture d'erreurs (Error Boundary) pour Workca.
+ * RESPONSABILITÉ  : intercepter les erreurs de rendu et afficher un message lisible.
+ * NE FAIT PAS     : ne parle pas à Supabase.
+ * DÉPEND DE       : React.
+ * UTILISÉ PAR     : App.tsx.
+ */
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {

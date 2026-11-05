@@ -1,10 +1,16 @@
-﻿// En-tête de navigation de l'application Workca.
-import { Bell, Globe, LogOut, Menu, User, Zap, Sun, Moon, Settings as SettingsIcon, Heart, Search } from "lucide-react";
+/**
+ * PROBLÈME RÉSOLU : en-tête de navigation de l'application Workca.
+ * RESPONSABILITÉ  : barre de navigation, menu mobile, bascule de mode (switchMode).
+ * NE FAIT PAS     : ne gère pas la session Supabase.
+ * DÉPEND DE       : lib/i18n, lib/store, components/ui/*, components/layout/Logo, @/types.
+ * UTILISÉ PAR     : App.tsx.
+ */
+import { Bell, Globe, LogOut, Menu, User, Search } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useLang, t } from "../../lib/i18n";
-import Logo from "./Logo";
-import { Button } from "../ui/button";
+import { useLang, t } from "lib/i18n";
+import Logo from "components/layout/Logo";
+import { Button } from "components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +18,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { useStore } from "../../lib/store";
-import type { User as UserType } from "../../types";
+} from "components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "components/ui/sheet";
+import { useStore } from "lib/store";
+import type { User as UserType } from "@/types";
 
 interface HeaderProps {
   currentUser: UserType | null;
@@ -29,9 +35,9 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
   const { lang, setLang } = useLang();
   const { state, update, patch } = useStore();
   const navigate = useNavigate();
-  const switchMode = (newRole: string) => {
+  const switchMode = (newRole: "chercheur" | "employeur") => {
     if (!currentUser) return;
-    update("users", state.users.map((u) => (u.id === currentUser.id ? { ...u, role: newRole as any } : u)));
+    update("users", state.users.map((u) => (u.id === currentUser.id ? { ...u, role: newRole } : u)));
     if (newRole === "employeur" && !state.employers.some((e) => e.userId === currentUser.id)) {
       patch("employers", {
         userId: currentUser.id,
@@ -40,7 +46,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
         orgType: "entreprise",
         verification: "déclaré",
         verificationRequested: false,
-      } as any);
+      });
     }
     if (newRole === "chercheur" && !state.seekers.some((s) => s.userId === currentUser.id)) {
       patch("seekers", {
@@ -55,7 +61,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
         experience: "",
         languages: ["français"],
         missionsDone: 0,
-      } as any);
+      });
     }
     navigate("/" + newRole);
   };
@@ -78,7 +84,8 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
   );
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
+    <>
+    <header className="fixed inset-x-0 top-0 z-40 w-full border-b bg-background">
       <div className="container flex h-14 items-center justify-between gap-3 px-4">
         <div className="flex items-center gap-2">
           <Logo size={36} showText />
@@ -116,7 +123,13 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
             <Globe className="h-4 w-4" />
           </Button>
 
-           <Button variant="ghost" size="icon" title={lang === "fr" ? "Recherche" : "Search"} aria-label="Search">
+           <Button
+             variant="ghost"
+             size="icon"
+             className="hidden min-[360px]:inline-flex"
+             title={lang === "fr" ? "Recherche" : "Search"}
+             aria-label="Search"
+           >
              <Link to="/recherche"><Search className="h-4 w-4" /></Link>
            </Button>
 
@@ -211,5 +224,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
         </div>
       </div>
     </header>
+    <div aria-hidden="true" className="h-14" />
+    </>
   );
 }

@@ -1,6 +1,6 @@
 // Mapping nom d'icone (chaine) -> composant lucide-react.
 // Utilise par CategoryGrid et partout ou une icone est referencee par son nom.
-import React from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Laptop,
   Wrench,
@@ -16,7 +16,7 @@ import {
   Briefcase,
 } from "lucide-react";
 
-const iconMap: Record<string, React.ComponentType<any>> = {
+const iconMap: Record<string, LucideIcon> = {
   laptop: Laptop,
   wrench: Wrench,
   heart: Heart,
@@ -33,7 +33,7 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   briefcase: Briefcase,
 };
 
-export function getIcon(name: string): React.ComponentType<any> {
+export function getIcon(name: string): LucideIcon {
   const key = String(name ?? "")
     .trim()
     .toLowerCase()
