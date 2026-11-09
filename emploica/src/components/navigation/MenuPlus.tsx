@@ -41,7 +41,8 @@ export default function MenuPlus({ currentUser, onLogout }: MenuPlusProps) {
 
   const switchSpace = () => {
     if (currentUser.role === "admin") return;
-    if (currentUser.role === "employeur") {
+    const activeSpace = currentUser.activeRole ?? currentUser.role;
+    if (activeSpace === "employeur" || activeSpace === "entreprise") {
       setActiveSpace("chercheur");
       setOpen(false);
       navigate("/chercheur");
@@ -98,12 +99,29 @@ export default function MenuPlus({ currentUser, onLogout }: MenuPlusProps) {
         </nav>
         <div className="grid gap-2 border-t pt-3">
           {currentUser.role !== "admin" && (
-            <Button type="button" variant="outline" className="justify-start gap-3" onClick={switchSpace}>
-              {currentUser.role === "employeur"
+            <>
+              <Button type="button" variant="outline" className="justify-start gap-3" onClick={switchSpace}>
+              {(currentUser.activeRole ?? currentUser.role) !== "chercheur"
                 ? <UserRound className="h-4 w-4" aria-hidden="true" />
                 : <BriefcaseBusiness className="h-4 w-4" aria-hidden="true" />}
               {switchLabel}
-            </Button>
+              </Button>
+              {currentUser.roles?.includes("entreprise") && (currentUser.activeRole ?? currentUser.role) !== "entreprise" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="justify-start gap-3"
+                  onClick={() => {
+                    setActiveSpace("entreprise");
+                    setOpen(false);
+                    navigate("/employeur");
+                  }}
+                >
+                  <BriefcaseBusiness className="h-4 w-4" aria-hidden="true" />
+                  {lang === "fr" ? "Passer à l'espace entreprise" : "Switch to company space"}
+                </Button>
+              )}
+            </>
           )}
           <Button
             type="button"
