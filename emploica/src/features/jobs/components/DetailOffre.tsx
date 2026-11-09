@@ -6,10 +6,12 @@
  * UTILISÉ PAR     : app/routes (/offres/:id).
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, MessageCircle, Phone, Share2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Mail, MapPin, MessageCircle, Phone, Share2 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useUserApplications } from "@/features/applications/hooks/useApplications";
 import { useEmployerProfiles } from "@/features/employers/hooks/useEmployerProfiles";
 import { useOffers } from "@/features/jobs/hooks/useOffers";
@@ -49,7 +51,8 @@ export default function DetailOffre() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { lang } = useLang();
-  const { currentUser } = useStore();
+  const { currentUser, state } = useStore();
+  const [coverMessage, setCoverMessage] = useState("");
   const offersQuery = useOffers();
   const employerProfilesQuery = useEmployerProfiles();
   const applicationsQuery = useUserApplications(currentUser.id);
@@ -76,10 +79,14 @@ export default function DetailOffre() {
   const isOwner = currentUser.role === "employeur" && offer?.employerId === currentUser.id;
   const canApply = currentUser.role === "chercheur" && !isOwner && !isExpired;
   const isApplied = (applicationsQuery.data ?? []).some((application) => application.offerId === offer?.id);
+  const seekerProfile = state.seekers.find((profile) => profile.userId === currentUser.id);
 
   const applyMutation = useMutation({
     mutationFn: async (target: Offer) => {
       if (!supabase) throw new Error(lang === "fr" ? "Le service des offres est indisponible." : "The jobs service is unavailable.");
+      if (target.cvRequired && !seekerProfile?.cvUrl) {
+        throw new Error(lang === "fr" ? "Cette offre exige un CV. Ajoutez-le dans votre profil avant de postuler." : "This job requires a resume. Add it to your profile before applying.");
+      }
       const createdAt = new Date().toISOString();
       const { error } = await supabase.from("applications").insert({
         id: `app-${Math.random().toString(36).slice(2, 9)}`,
@@ -87,6 +94,8 @@ export default function DetailOffre() {
         seeker_id: currentUser.id,
         status: "envoyee",
         created_at: createdAt,
+        cover_message: coverMessage.trim() || null,
+        cv_path: seekerProfile?.cvUrl ?? null,
       });
       if (error) throw error;
 
@@ -323,6 +332,14 @@ export default function DetailOffre() {
               )}
             </Button>
           )}
+          {offer.contactEmail && (
+            <Button variant="outline" asChild>
+              <a href={`mailto:${offer.contactEmail}`}>
+                <Mail aria-hidden="true" />
+                Email
+              </a>
+            </Button>
+          )}
           <Button type="button" variant="outline" onClick={() => partagerOffre(offer, employerName)}>
             <Share2 aria-hidden="true" />
             {lang === "fr" ? "Partager l'offre" : "Share job"}
@@ -335,11 +352,20 @@ export default function DetailOffre() {
         />
       </div>
 
-      <div className="fixed inset-x-0 bottom-16 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-16 z-40 border-t bg-background px-4 py-3">
         <div className="container flex gap-3">
           {canApplyWithProfile && (
+            <div className="flex w-full flex-col gap-2 sm:flex-row">
+            <Textarea
+              aria-label={lang === "fr" ? "Message de candidature (facultatif)" : "Application message (optional)"}
+              value={coverMessage}
+              onChange={(event) => setCoverMessage(event.target.value)}
+              placeholder={lang === "fr" ? "Ajouter un message (facultatif)" : "Add an optional message"}
+              rows={2}
+              className="min-h-11 flex-1 resize-none bg-background"
+            />
             <Button
-              className="flex-1"
+              className="min-h-11 sm:min-w-36"
               onClick={() => applyMutation.mutate(offer)}
               disabled={
                 isApplied ||
@@ -354,6 +380,7 @@ export default function DetailOffre() {
                 ? lang === "fr" ? "Envoi…" : "Sending…"
                 : applyLabel}
             </Button>
+            </div>
           )}
         </div>
       </div>

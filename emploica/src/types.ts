@@ -17,6 +17,7 @@ export type ApplicationStatus = "envoyée" | "consultée" | "retenue" | "refusé
 export type OfferStatus = "brouillon" | "en-attente" | "publiée" | "clôturée" | "expirée";
 
 export type OfferContactMode = "profil" | "whatsapp" | "appel";
+export type WorkspaceRole = "chercheur" | "employeur" | "entreprise";
 
 export type MessageStatus = "envoyé" | "lu";
 
@@ -48,6 +49,9 @@ export interface User {
   status: "actif" | "suspendu";
   verification: VerificationLevel;
   createdAt: string;
+  /** Workspaces granted to this account; role remains the route-compatible active role. */
+  roles?: WorkspaceRole[];
+  activeRole?: WorkspaceRole;
 }
 
 export interface SeekerProfile {
@@ -107,7 +111,9 @@ export interface Offer {
   salaryMax?: number;
   contactMode?: OfferContactMode;
   contactPhone?: string;
+  contactEmail?: string;
   shareTelegram?: boolean;
+  cvRequired?: boolean;
   telegramMessageId?: string;
   isFilled?: boolean;
   filledAt?: string;
@@ -121,6 +127,8 @@ export interface Application {
   seekerId: string;
   status: ApplicationStatus;
   createdAt: string;
+  coverMessage?: string;
+  cvPath?: string;
 }
 
 export interface Conversation {

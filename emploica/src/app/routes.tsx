@@ -61,12 +61,12 @@ function RequireEmployerProfile({ children }: { children: JSX.Element }) {
 
   if (profilesQuery.isLoading) {
     return <p role="status" className="py-10 text-center text-muted-foreground">
-      {lang === "fr" ? "Chargement du profil employeur…" : "Loading employer profile…"}
+      {lang === "fr" ? "Chargement du profil de publication…" : "Loading the posting profile…"}
     </p>;
   }
   if (profilesQuery.isError) {
     return <p role="alert" className="py-10 text-center text-destructive">
-      {lang === "fr" ? "Impossible de vérifier le profil employeur." : "Could not check the employer profile."}
+      {lang === "fr" ? "Impossible de vérifier le profil de publication." : "Could not check the posting profile."}
     </p>;
   }
   const profiles = profilesQuery.data ?? state.employers;

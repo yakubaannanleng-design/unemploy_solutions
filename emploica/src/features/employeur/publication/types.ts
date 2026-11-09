@@ -4,6 +4,7 @@ export interface PublicationDraft {
   title: string;
   category: string;
   description: string;
+  skills: string;
   region: string;
   city: string;
   quartier: string;
@@ -12,8 +13,10 @@ export interface PublicationDraft {
   salaryMax: string;
   educationLevel: string;
   experienceLevel: string;
+  cvRequired: boolean;
   expiresAt: string;
   contactMode: OfferContactMode;
   contactPhone: string;
+  contactEmail: string;
   shareTelegram: boolean;
 }

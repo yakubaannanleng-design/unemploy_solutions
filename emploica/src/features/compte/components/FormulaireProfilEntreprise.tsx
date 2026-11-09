@@ -107,7 +107,7 @@ export default function FormulaireProfilEntreprise() {
         profile,
       ]);
       await queryClient.invalidateQueries({ queryKey: ["employerProfiles"] });
-      selectSpace("employeur");
+      selectSpace(values.orgType === "entreprise" ? "entreprise" : "employeur");
       toast.success(lang === "fr" ? "Profil de l'entreprise enregistré avec succès." : "Company profile saved successfully.");
       navigate(destination, { replace: true });
     },
@@ -181,7 +181,7 @@ export default function FormulaireProfilEntreprise() {
       )}
       {profilesQuery.isError && (
         <p role="alert" className="text-sm text-destructive">
-          {lang === "fr" ? "Impossible de charger le profil employeur." : "Could not load the employer profile."}
+          {lang === "fr" ? "Impossible de charger le profil de publication." : "Could not load the posting profile."}
         </p>
       )}
 

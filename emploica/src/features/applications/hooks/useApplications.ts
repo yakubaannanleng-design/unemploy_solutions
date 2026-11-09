@@ -24,6 +24,8 @@ function mapApplication(row: Record<string, unknown>): Application {
     seekerId: String(row.seeker_id),
     status,
     createdAt: String(row.created_at),
+    coverMessage: typeof row.cover_message === "string" ? row.cover_message : undefined,
+    cvPath: typeof row.cv_path === "string" ? row.cv_path : undefined,
   };
 }
 

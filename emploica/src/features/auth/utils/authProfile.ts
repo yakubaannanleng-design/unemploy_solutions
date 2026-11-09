@@ -1,5 +1,5 @@
 import type { User as SupabaseAuthUser } from "@supabase/supabase-js";
-import type { User } from "@/types";
+import type { User, WorkspaceRole } from "@/types";
 import { supabase } from "@/lib/supabase";
 
 type UserProfileRow = {
@@ -11,6 +11,7 @@ type UserProfileRow = {
   status: User["status"];
   verification: string;
   created_at: string;
+  active_role?: WorkspaceRole | null;
 };
 
 function mapUser(row: UserProfileRow): User {
@@ -24,6 +25,9 @@ function mapUser(row: UserProfileRow): User {
     status: row.status,
     verification: row.verification === "verifie" ? "vérifié" : "déclaré",
     createdAt: row.created_at,
+    activeRole: row.active_role === "entreprise" || row.active_role === "employeur" || row.active_role === "chercheur"
+      ? row.active_role
+      : row.role === "employeur" ? "employeur" : "chercheur",
   };
 }
 
@@ -33,7 +37,7 @@ export async function resolveWorkcaUser(authUser: SupabaseAuthUser): Promise<Use
   const loadProfile = async () => {
     const { data, error } = await supabase
       .from("users")
-      .select("id,role,name,phone,email,status,verification,created_at")
+      .select("id,role,name,phone,email,status,verification,created_at,active_role")
       .eq("id", authUser.id)
       .maybeSingle();
     if (error) throw error;
@@ -62,7 +66,7 @@ export async function resolveWorkcaUser(authUser: SupabaseAuthUser): Promise<Use
         verification: "declare",
         created_at: authUser.created_at,
       })
-      .select("id,role,name,phone,email,status,verification,created_at")
+      .select("id,role,name,phone,email,status,verification,created_at,active_role")
       .maybeSingle();
 
     if (error && error.code !== "23505") throw error;
@@ -70,5 +74,43 @@ export async function resolveWorkcaUser(authUser: SupabaseAuthUser): Promise<Use
   }
 
   if (!profile) throw new Error("Le profil Workca associé au compte n'a pas pu être chargé.");
-  return mapUser(profile);
+  const user = mapUser(profile);
+  let roleRows: Array<{ role?: string }> = [];
+  try {
+    const rolesTable = supabase.from("user_roles") as {
+      select?: (columns: string) => {
+        eq?: (column: string, value: string) => Promise<{
+          data?: Array<{ role?: string }> | null;
+          error?: unknown;
+        }>;
+      };
+    };
+    const roleQuery = typeof rolesTable?.select === "function" ? rolesTable.select("role") : null;
+    if (roleQuery && typeof roleQuery.eq === "function") {
+      const result = await roleQuery.eq("user_id", authUser.id);
+      roleRows = result.data ?? [];
+    }
+  } catch {
+    // Older previews can run before the role migration is available.
+  }
+  const roles = (roleRows ?? [])
+    .map((row) => row.role)
+    .filter((role): role is WorkspaceRole => role === "chercheur" || role === "employeur" || role === "entreprise");
+  const normalizedRoles = roles.length > 0 ? roles : [user.activeRole ?? "chercheur"];
+  if (roles.length === 0) {
+    try {
+      const rolesTable = supabase.from("user_roles") as {
+        upsert?: (values: Record<string, unknown>, options?: Record<string, unknown>) => Promise<unknown>;
+      };
+      if (rolesTable?.upsert) {
+        await rolesTable.upsert(
+          { user_id: authUser.id, role: normalizedRoles[0] },
+          { onConflict: "user_id,role" },
+        );
+      }
+    } catch {
+      // Keep authentication successful while an older preview lacks user_roles.
+    }
+  }
+  return { ...user, roles: normalizedRoles };
 }

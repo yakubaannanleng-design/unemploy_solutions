@@ -1,6 +1,7 @@
 import type { ContractType } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import LocationFilter from "@/components/common/LocationFilter";
 import { useLang } from "@/lib/i18n";
@@ -72,6 +73,15 @@ export default function Etape2Conditions({ draft, update, minDate }: Etape2Condi
           <Label htmlFor="offer-deadline">{lang === "fr" ? "Date limite" : "Deadline"}</Label>
           <Input id="offer-deadline" type="date" min={minDate} value={draft.expiresAt} onChange={(event) => update({ expiresAt: event.target.value })} required />
         </div>
+      </div>
+      <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+        <div>
+          <Label htmlFor="offer-cv-required">{lang === "fr" ? "CV obligatoire" : "Resume required"}</Label>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {lang === "fr" ? "Les candidats devront avoir un CV enregistrÃ© pour postuler." : "Candidates must have a saved resume to apply."}
+          </p>
+        </div>
+        <Switch id="offer-cv-required" checked={draft.cvRequired} onCheckedChange={(cvRequired) => update({ cvRequired })} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">

@@ -104,6 +104,10 @@ export default function App() {
                    : o.status,
                boost: o.boost,
                views: o.views,
+               cvRequired: o.cv_required === true,
+                contactMode: o.contact_mode,
+                contactPhone: o.contact_phone,
+                contactEmail: o.contact_email,
                isFilled: o.is_filled === true,
                filledAt: o.filled_at,
              }));
@@ -116,6 +120,8 @@ export default function App() {
                seekerId: a.seeker_id,
                status: a.status,
                createdAt: a.created_at,
+               coverMessage: a.cover_message ?? undefined,
+               cvPath: a.cv_path ?? undefined,
              }));
              update("applications", mapped);
            }

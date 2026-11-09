@@ -69,6 +69,16 @@ export default function Etape1Poste({ draft, update }: Etape1PosteProps) {
           placeholder={lang === "fr" ? "Décris les missions et le profil recherché." : "Describe the responsibilities and candidate profile."}
         />
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="offer-skills">{lang === "fr" ? "Compétences recherchées" : "Required skills"}</Label>
+        <Input
+          id="offer-skills"
+          value={draft.skills}
+          onChange={(event) => update({ skills: event.target.value })}
+          placeholder={lang === "fr" ? "Ex. vente, caisse, accueil (séparer par des virgules)" : "e.g. sales, cashier, customer service (comma separated)"}
+          maxLength={500}
+        />
+      </div>
     </section>
   );
 }

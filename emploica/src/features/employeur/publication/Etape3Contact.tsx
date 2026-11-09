@@ -86,6 +86,18 @@ export default function Etape3Contact({ draft, update }: Etape3ContactProps) {
         </div>
       )}
 
+      <div className="space-y-2">
+        <Label htmlFor="contact-email">{lang === "fr" ? "Email de contact (facultatif)" : "Contact email (optional)"}</Label>
+        <Input
+          id="contact-email"
+          type="email"
+          autoComplete="email"
+          value={draft.contactEmail}
+          onChange={(event) => update({ contactEmail: event.target.value })}
+          placeholder="recrutement@exemple.cm"
+        />
+      </div>
+
       <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
         <div>
           <Label htmlFor="share-telegram">{lang === "fr" ? "Partager aussi sur Telegram" : "Also share on Telegram"}</Label>

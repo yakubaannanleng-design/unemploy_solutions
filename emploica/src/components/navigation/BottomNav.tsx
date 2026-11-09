@@ -43,11 +43,11 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
     .some((profile) => profile.userId === currentUser.id);
   const handlePublish = () => {
     if (employerProfilesQuery.isLoading) {
-      toast.info(lang === "fr" ? "Chargement de votre profil employeur…" : "Loading your employer profile…");
+      toast.info(lang === "fr" ? "Chargement de votre profil de publication…" : "Loading your posting profile…");
       return;
     }
     if (employerProfilesQuery.isError) {
-      toast.error(lang === "fr" ? "Impossible de vérifier votre profil employeur." : "Could not check your employer profile.");
+      toast.error(lang === "fr" ? "Impossible de vérifier votre profil de publication." : "Could not check your posting profile.");
       return;
     }
     if (hasEmployerProfile) {

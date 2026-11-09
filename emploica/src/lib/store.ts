@@ -16,6 +16,7 @@ import type {
   Transaction,
   Training,
   User,
+  WorkspaceRole,
 } from "../types";
 import {
   DEMO_APPLICATIONS,
@@ -29,6 +30,7 @@ import {
   DEMO_USERS,
 } from "../data/mockData";
 import { TRAININGS } from "../data/trainings";
+import { supabase } from "./supabase";
 
 const STORE_KEY = "workca:v1";
 const STORE_VERSION = 2;
@@ -60,7 +62,7 @@ type IdListItem<K extends IdListKey> = Extract<StoreState[K][number], { id: stri
 
 type StoreApi = ReturnType<typeof useStoreValue>;
 const StoreContext = createContext<StoreApi | null>(null);
-export type Workspace = "chercheur" | "employeur";
+export type Workspace = WorkspaceRole;
 
 function defaultState(): StoreState {
   return {
@@ -144,8 +146,13 @@ function useStoreValue() {
 
   const me: User = useMemo(() => {
     const user = state.users.find((item) => item.id === state.currentUserId) ?? state.users[0];
-    const activeSpace = state.activeSpaces[state.currentUserId];
-    return activeSpace && user.role !== "admin" ? { ...user, role: activeSpace } : user;
+    const activeSpace = state.activeSpaces[state.currentUserId] ?? user.activeRole;
+    if (!activeSpace || user.role === "admin") return user;
+    return {
+      ...user,
+      activeRole: activeSpace,
+      role: activeSpace === "chercheur" ? "chercheur" : "employeur",
+    };
   }, [state.activeSpaces, state.users, state.currentUserId]);
 
   return {
@@ -155,11 +162,35 @@ function useStoreValue() {
     replace,
     remove,
     setCurrentUser: useCallback((id: string) => update("currentUserId", id), [update]),
-    setActiveSpace: useCallback((space: Workspace) =>
+    setActiveSpace: useCallback((space: Workspace) => {
       setState((prev) => ({
         ...prev,
         activeSpaces: { ...prev.activeSpaces, [prev.currentUserId]: space },
-      })), []),
+      }));
+      const userId = state.currentUserId;
+      if (supabase && userId) {
+        try {
+          const usersTable = supabase.from("users") as {
+            update?: (values: Record<string, unknown>) => { eq?: (column: string, value: string) => Promise<unknown> };
+          } | null;
+          const rolesTable = supabase.from("user_roles") as {
+            upsert?: (values: Record<string, unknown>, options?: Record<string, unknown>) => Promise<unknown>;
+          } | null;
+          const writes: Promise<unknown>[] = [];
+          const userUpdate = usersTable?.update?.({ active_role: space });
+          if (userUpdate?.eq) writes.push(userUpdate.eq("id", userId));
+          if (rolesTable?.upsert) {
+            writes.push(rolesTable.upsert(
+              { user_id: userId, role: space },
+              { onConflict: "user_id,role" },
+            ));
+          }
+          void Promise.all(writes).catch(() => undefined);
+        } catch {
+          // The role migration may not be deployed yet; keep the local switch usable.
+        }
+      }
+    }, [state.currentUserId]),
     upsertUser,
     currentUser: me,
   };

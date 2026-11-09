@@ -11,7 +11,7 @@ export default function useTypeCompte() {
   const { state, currentUser, setActiveSpace } = useStore();
 
   return {
-    currentSpace: currentUser.role === "admin" ? null : currentUser.role,
+    currentSpace: currentUser.role === "admin" ? null : currentUser.activeRole ?? currentUser.role,
     hasSelectedSpace: Object.prototype.hasOwnProperty.call(state.activeSpaces, currentUser.id),
     selectSpace: (space: Workspace) => setActiveSpace(space),
   };

@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "components/ui/sheet";
-import { useStore } from "lib/store";
+import { useStore, type Workspace } from "lib/store";
 import type { User as UserType } from "@/types";
 
 interface HeaderProps {
@@ -33,10 +33,13 @@ interface HeaderProps {
 
 export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers, unreadCount = 0 }: HeaderProps) {
   const { lang, setLang } = useLang();
-  const { state, update, patch } = useStore();
+  const { state, update, patch, setActiveSpace } = useStore();
   const navigate = useNavigate();
-  const switchMode = (newRole: "chercheur" | "employeur") => {
+  const activeWorkspace = currentUser?.activeRole ?? currentUser?.role;
+  const hasCompanyWorkspace = currentUser?.roles?.includes("entreprise") || activeWorkspace === "entreprise";
+  const switchMode = (newRole: Workspace) => {
     if (!currentUser) return;
+    setActiveSpace(newRole);
     update("users", state.users.map((u) => (u.id === currentUser.id ? { ...u, role: newRole } : u)));
     if (newRole === "employeur" && !state.employers.some((e) => e.userId === currentUser.id)) {
       patch("employers", {
@@ -63,7 +66,7 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
         missionsDone: 0,
       });
     }
-    navigate("/" + newRole);
+    navigate(newRole === "entreprise" ? "/employeur" : "/" + newRole);
   };
   const location = { pathname: typeof window !== "undefined" ? window.location.pathname : "/" };
   const [open, setOpen] = useState(false);
@@ -102,12 +105,15 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
           )}
           {currentUser && currentUser.role !== "admin" && (
             <select
-              value={currentUser.role}
-              onChange={(e) => switchMode(e.target.value)}
+              value={activeWorkspace}
+              onChange={(e) => switchMode(e.target.value as Workspace)}
               className="hidden sm:block rounded-md border border-input bg-background px-2 py-1 text-xs"
             >
               <option value="chercheur">{lang === "fr" ? "Mode chercheur" : "Seeker mode"}</option>
               <option value="employeur">{lang === "fr" ? "Mode employeur" : "Employer mode"}</option>
+              {hasCompanyWorkspace && (
+                <option value="entreprise">{lang === "fr" ? "Mode entreprise" : "Company mode"}</option>
+              )}
             </select>
           )}
         </div>
@@ -210,6 +216,16 @@ export default function Header({ currentUser, onLogout, onSwitchUser, demoUsers,
                   >
                     {lang === "fr" ? "Employeur" : "Employer"}
                   </Button>
+                  {hasCompanyWorkspace && (
+                    <Button
+                      variant={activeWorkspace === "entreprise" ? "default" : "outline"}
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => switchMode("entreprise")}
+                    >
+                      {lang === "fr" ? "Entreprise" : "Company"}
+                    </Button>
+                  )}
                 </div>
               )}
                 {currentUser && nav("/" + currentUser.role, t("home", lang))}
