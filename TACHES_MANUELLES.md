@@ -1,12 +1,12 @@
 # Taches manuelles Workca
 
-Etat au 9 novembre 2026. Le code corrige est sur `main` et `restructuration`, commit `9559566`. Les tests locaux, le build et les migrations ont ete verifies. Le projet Supabase de test (`kyssjkzxvwwnapffphxd`) et le projet de production (`vmmvniqdxnvpkmqhrbxb`) possedent maintenant les colonnes de roles, d'offres et de candidatures necessaires.
+Etat au 9 novembre 2026. Le code corrige est sur `main` (commit `6a2a9a5`) et `restructuration` (commit `b88b478`). Les tests locaux, le build et les migrations ont ete verifies. Le projet Supabase de test (`kyssjkzxvwwnapffphxd`) et le projet de production (`vmmvniqdxnvpkmqhrbxb`) possedent maintenant les colonnes de roles, d'offres et de candidatures necessaires.
 
 ## A faire dans Vercel
 
 1. Ouvrir le projet Vercel Workca et verifier que la branche de production est `main`.
 2. Verifier `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans les variables de production. Elles doivent pointer vers `vmmvniqdxnvpkmqhrbxb`.
-3. Relancer un deploiement depuis le commit `9559566` si le domaine affiche encore l'ancienne version.
+3. Relancer un deploiement depuis le commit `6a2a9a5` si le domaine affiche encore l'ancienne version.
 4. Ouvrir le preview de `restructuration` et verifier que son URL utilise le projet Supabase de test avant de faire des essais de donnees.
 
 ## A faire dans Supabase Auth
